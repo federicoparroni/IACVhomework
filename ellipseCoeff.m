@@ -12,7 +12,7 @@ function [coefficients] = ellipseCoeff(ellipse)
 
     A = (a^2)*sin(phi)^2 + (b^2)*cos(phi)^2;
     B = 2*(b^2 - a^2)*sin(phi)*cos(phi);
-    C = (a^2)*cos(phi)^2 + (b^2)*sin(phi)*sin(phi);
+    C = (a^2)*cos(phi)^2 + (b^2)*sin(phi)^2;
     D = -2*A*Xc -B*Yc;
     E = -B*Xc -2*C*Yc;
     F = A*(Xc^2) +B*Xc*Yc +C*(Yc^2) -(a^2)*(b^2);
