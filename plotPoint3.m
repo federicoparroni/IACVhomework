@@ -1,7 +1,7 @@
-function [] = plotPoint3(point, style)
+function [] = plotPoint3(point, style, size)
 %PLOTPOINT3 Draw a 3D point using the standard right hand reference
 %   
     %plot3(-point(1),point(3),-point(2),style);
-    plot3(point(1),point(2),point(3),style);
+    plot3(point(1),point(2),point(3),style, 'MarkerSize',size);
 end
 

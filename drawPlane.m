@@ -6,10 +6,11 @@ function [] = drawPlane(coeff, color)
     c = coeff(3);
     d = coeff(4);
 
-    [x,y] = meshgrid(-1:0.1:1);
     if c==0
-        z = repelem(d,size(x,1)); %zeros(size(x, 1));
+        [y,z] = meshgrid(-1:0.1:1);
+        x = -1/a*(b*y + c*z + d);
     else
+        [x,y] = meshgrid(-1:0.1:1);
         z = -1/c*(a*x + b*y + d);
     end
     
