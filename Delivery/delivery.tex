@@ -1,0 +1,106 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Image Analysis and Computer Vision Homework}
+\author{Parroni Federico}
+\date{December 2018}
+
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{mathtools}
+
+\begin{document}
+\maketitle
+
+\section{Image feature extraction and selection}
+
+\subsection{Ellipsis detection}
+The main ellipsis of interest in the image are the rims of the wheels. A built-in function of Matlab, \textit{regionprops}, has been used to find the ellipsis in the image.
+The original image has been processed to help \textit{regionprops} to find correctly and precisely the wanted ellipsis.
+At first, the original image is filtered to enhance the contrast. Then, for each wheel, an ad-hoc filtering process has been adopted:
+\begin{itemize}
+    \item Wheel 1: binarize the preprocessed image with a global threshold computed using Otsu's method, then apply the \textit{remove} filter (that set a pixel to 0 if its 4 neighbors are all 1, thus leaving only boundary pixels)
+    \item Wheel 2: binarize again the original image, but with two different threshold values computed by changing the neighborhood size. At this point, we can sum the two thresholded images: in this way we can select white parts in both ones. Then, we apply a \textit{dilate} filter to reduce a bit the remaining black holes of the wheel rays
+\end{itemize}
+Now we can use \textit{regionprops} to get the parameters of some ellipsis in the image. From this set of elements, only the most significant are taken and we get rid off all the others, resulting in the following:
+\begin{figure}[h!]
+\centering
+%\includegraphics[scale=1.7]{universe}
+\caption{The Universe}
+\label{fig:universe}
+\end{figure}
+
+
+\subsection{Feature detection}
+We can use the well-known Harris to extract features from the image. I used the value 2.7 for the standard deviation of the Gaussian filter (that controls the sensitivity of the filter) to avoid extracting too many and useless features.
+
+\section{Geometry}
+\subsection{Diameter of wheel and wheel-to-wheel distance ratio}
+The ratio can be found by computing the matrix $H_R$ such that, multiplied to an image point belonging to a plane, it gives back the rectified version of it. We can use $H_R$ to find the rectified wheels and then measure directly their diameters and distance in pixels. These are not the original measures (because we cannot find the real size with only this information), but since our goal is the ratio between two measures, this is good enough.
+To compute $H_R$ we can resort to the \textit{conic dual to the circular points} and its image. This is:
+$$ C_\infty^* = IJ^T + JI^T = \begin{pmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 0
+\end{pmatrix}
+$$
+and its image:
+\begin{equation}
+C_\infty'^* = I'J'^T + J'I'^T
+\end{equation}
+where $I = \bigl(\begin{smallmatrix}1 \\ i \\ 0 \end{smallmatrix} \bigr)$, $J = \bigl(\begin{smallmatrix}1 \\ -i \\ 0 \end{smallmatrix} \bigr)$ are the circular points (intersection between a circumference and the line at infinity) and $ I' $, $ J' $ their images.
+Since a dual conic is transformed from a projective transformation H as:
+$$ C'^* = H^* C^* H^T $$
+we can exploit this relation to get $H_R$. In fact, in the case of $C_\infty^*$:
+$$ C_\infty^* = H_R \: C_\infty'^* \: H_R^T = \begin{pmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 0
+\end{pmatrix}$$
+If we explicit $C'^*$ from the above equation, we get:
+\begin{equation}
+C_\infty'^* = H_R^{-1} \: C_\infty^* \: H_R^{-T}
+\end{equation}
+So, if we know how the \textit{conic dual to the circular points} is mapped we can easily find $H_R$ using SVD (Singular Value Decomposition).
+If fact, SVD decompose a matrix $A$ into 3 matrices:
+$$ A = USV^T $$
+In addition, if A is symmetric (and $C_\infty^*$ is), $U=V$. In our case:
+$$ SVD(C_\infty'^*) = USU^T = H_R^{-1} \: C_\infty^* \: H_R^{-T} $$
+resulting in $U=H_R^{-1}$.
+
+\vspace{6mm}
+The following steps have been followed:
+\begin{enumerate}
+    \item Find the images of the circular points starting from the two wheels (we know that they were circles and lie in a plane), by intersecting the 2 conics and the line at the infinity (findable thanks to the vanishing points)
+    \item Compute $ C_\infty'^* $ as shown in equation 1
+    \item Apply SVD to $ C_\infty'^* $ as shown in equation 2
+    \item Get $ H_R = U^{-1} $
+    \item Find 2 pairs of diametrically opposed points on the wheels
+    \item Apply $ H_R $ to those points to get the rectificated points:
+          $ \tilde{x_i} = H_R \: x'_i $
+    \item Compute the ratio from this 4 points
+\end{enumerate}
+
+\begin{figure}[h!]
+\centering
+%\includegraphics[scale=1.7]{universe}
+\caption{The Universe}
+\label{fig:universe}
+\end{figure}
+
+\subsection{Calibrate the camera determining the matrix K}
+Calibration can be done 
+
+\section{Test}
+$v_x = P*V_x$ \\
+$v_x = K*\begin{pmatrix}R & t\end{pmatrix}*\begin{pmatrix}1 \\ 0 \\ 0 \\ 0\end{pmatrix}$ \\
+$v_x = K*\begin{pmatrix}r1 & r2 & r3 & t\end{pmatrix}*\begin{pmatrix}1 \\ 0 \\ 0 \\ 0\end{pmatrix}$ \\
+$v_x = K*r1$ \\
+$r1 = K^{-1}*v_x$ \\
+
+\section{Conclusion}
+``I always thought something was fundamentally wrong with the universe'' \citep{adams1995hitchhiker}
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
