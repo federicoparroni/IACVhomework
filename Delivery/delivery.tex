@@ -89,7 +89,58 @@ The following steps have been followed:
 \end{figure}
 
 \subsection{Calibrate the camera determining the matrix K}
-Calibration can be done 
+Under perspective projection, a scene point $X$ in space is projected to an image point $x$ via a projection matrix $P$ as:
+$$ \lambda x = PX = K \begin{pmatrix} R & t \end{pmatrix} \: X $$
+Calibration consists in finding the camera intrinsic parameters that compose the matrix K:
+$$ K = \begin{pmatrix}
+f_x & s & u_0 \\
+0 & f_y & v_0 \\
+0 & 0 & 1
+\end{pmatrix}
+$$
+where $f_x$, $f_y$ are the camera’s focal length expressed in pixels, $(u0, v0)$ are the coordinates of the camera’s principal point expressed in pixels and $s$ is the skew factor (we can assume that $s = 0$).\\
+This matrix can be found by considering the image of the \textit{absolute conic}. The absolute conic $\Omega_\infty$ is a conic on the plane at infinity, defined as:
+$$ \begin{cases}
+x^2 + y^2 + z^2 = 0 \\
+w = 0
+\end{cases}
+$$
+and so this coincides to:
+$$
+\Omega_\infty = \begin{pmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 1
+\end{pmatrix} = I
+$$
+Since a conic is transformed from a projective transformation H as:
+$$ C' = H^{-T} C H^{-1} $$
+applying the projection P to the \textit{image of the absolute conic} $\omega$, we obtain:
+$$
+\omega = P^{-T} \: I \: P^{-1} = (KR)^{-T} \: I \: (KR)^{-1} = (K^{-T}R) \: I \: (R^{-1}K^{-1}) = K^{-T}K^{-1}
+$$
+We notice that $\omega$ depends only on the camera calibration matrix K.
+If we take the \textit{image of the dual absolute conic} $\omega^*$:
+$$ \omega^* = \omega^{-1} = KK^T = \begin{pmatrix}
+f_x^2+u_0^2 & u_0v_0 & u_0 \\
+u_0v_0 & f_y^2+v_0^2 & v_0 \\
+u_0 & v_0 & 1
+\end{pmatrix}
+$$
+So, if we manage to find $\omega$, we have also found K. The \textit{image of the absolute conic} is a symmetric matrix and has 4 degrees of freedom, so we need to get 4 equations to fully determine it. For this scope, we can exploit the orthogonal vanishing points $v_x$, $v_y$, $v_z$ and one image of a circular point found before (that must belong to the conic), resulting in:
+$$
+\begin{cases}
+v_x^T \: \omega^* \: v_y = 0 \\
+v_y^T \: \omega^* \: v_z = 0 \\
+v_z^T \: \omega^* \: v_x = 0 \\
+I'^T \: \omega^* \: I' = 0
+\end{cases}
+$$
+
+\subsection{3D reconstruction of some pairs of symmetric features}
+We initially need to fix a suitable reference frame for the world. From the information we have, we can get the rotation matrix R that relates the camera frame and the world frame:
+$$ P = K \begin{pmatrix} R & t \end{pmatrix} $$
+
 
 \section{Test}
 $v_x = P*V_x$ \\
