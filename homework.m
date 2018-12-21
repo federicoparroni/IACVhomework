@@ -272,13 +272,13 @@ syms fx, syms fy, syms u0, syms v0;
 K = [fx, 0, u0; ...
      0, fy, v0; ...
      0, 0, 1];
-w = K*K.';
-w = inv(w);
-eqs = [ vanish_pointz.' * w * vanish_pointy; ...
-        vanish_pointz.' * w * vanish_pointx; ...
-        vanish_pointy.' * w * vanish_pointx; ...
-        [circ_points(1,:) 1] * w * [circ_points(1,:) 1].'; ...
-        %[circ_points(2,:) 1] * w * [circ_points(2,:) 1].'; ...
+w_dual = K*K.';
+w = inv(w_dual);
+eqs = [ vanish_pointz.' * w * vanish_pointy;
+        vanish_pointz.' * w * vanish_pointx;
+        vanish_pointy.' * w * vanish_pointx;
+        [circ_points(1,:) 1] * w * [circ_points(1,:) 1].';
+        %[circ_points(2,:) 1] * w * [circ_points(2,:) 1].';
       ];
 res = solve(eqs);
 fx = real(double(res.fx)); fx = fx(fx > 0); fx = fx(1);
@@ -298,7 +298,6 @@ K = [fx, 0, u0; ...
 % Find the location of some image keypoints in the scene using
 % backprojection. We fix the world reference frame at the center of the car
 % plate, with the y-axis contained in the vertical symmetry plane.
-
 % We can find the rotation matrix of the camera with respect to the world
 % reference frame. We can exploit again the vanishing points, since
 % (assuming that $v_x$ is an image point and $V_x$ is the direction of the
@@ -406,9 +405,9 @@ plotPoint3(symm_point_stopr,'rs',6);
 hold off;
 pbaspect([1,1,1]);
 grid on;
-title('3D Reconstruction (black plane: plate plane, cyan plane: symmetry plane)')
+title('3D Reconstruction')
 xlabel('x'); ylabel('y'); zlabel('z');
-legend('origin','x axis','y axis','z axis', 'viewpoint','cam frame', 'left plate ray','right plate ray','left light ray','right light ray','left stop ray','right stop ray', 'left plate','right plate','left light','right light','left stop','right stop');
+legend('origin','x axis','y axis','z axis', 'viewpoint','cam frame', 'left plate ray','right plate ray','left light ray','right light ray','left stop ray','right stop ray', 'car back plane','symmetry plane', 'left plate','right plate','left light','right light','left stop','right stop');
 set(gca, 'CameraPosition', [0,1,-1]);
 
 
