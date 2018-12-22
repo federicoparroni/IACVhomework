@@ -9,7 +9,10 @@ close all; clear all; clc;
 % to grayscale
 scale_factor = 4;
 original_im = rgb2gray(imresize(imread('Image1.jpg'), 1/scale_factor));
-im_width = length(original_im);
+%im_width = length(original_im);
+norm_f = max((size(original_im)))*scale_factor;
+norm_mx = diag([1/norm_factor, 1/norm_factor, 1]);
+
 maxw = length(original_im) * 1.2;   % used to draw lines over the image
 
 figure(); imshow(original_im); title('Original image');
@@ -198,26 +201,27 @@ I = [circ_points(1,:)'; 1];
 J = [circ_points(2,:)'; 1];
 image_dual_conic = I*J.' + J*I.';
 [~, DC, H] = svd(image_dual_conic);
-normalization = sqrt(DC);
-H = inv(normalization*H);
-%H = normalization * H;
+normalization = sqrt(DC); normalization(3,3)=1;
+%H_norm = inv(normalization*H);
+H = normalization * H;
 %H = inv(H);
 
 % Find the inverse mapping of the four intersection points
-a = H * [post_wheel_points(2,:), 1]'; a = a/a(3);
-b = H * [post_wheel_points(1,:), 1]'; b = b/b(3);
-c = H * [ant_wheel_points(2,:), 1]'; c = c/c(3);
-d = H * [ant_wheel_points(1,:), 1]'; d = d/d(3);
-
-figure();
-plot(a(1),a(2),'o'); plot(b(1),b(2),'x');
-plot(c(1),c(2),'h'); plot(d(1),d(2),'p');
-title('Inverse mapping of 4 wheel keypoints');
+a = H \ [post_wheel_points(2,:), 1]'; a = a/a(3);
+b = H \ [post_wheel_points(1,:), 1]'; b = b/b(3);
+c = H \ [ant_wheel_points(2,:), 1]'; c = c/c(3);
+d = H \ [ant_wheel_points(1,:), 1]'; d = d/d(3);
 
 % Compute the ratio distance - diameter from the rectified points
 ratio = norm( a-c, 2) / norm( a-b, 2)
+
+%figure();
+%plot(a(1),a(2),'o'); plot(b(1),b(2),'x');
+%plot(c(1),c(2),'h'); plot(d(1),d(2),'p');
+%title('Inverse mapping of 4 wheel keypoints');
+
 % 
-% rectified_im = imwarp(original_im, projective2d(H));
+%rectified_im = imwarp(original_im, projective2d(H'));
 
 %figure(5);
 % size_im = size(preprocessed_im);
@@ -251,10 +255,10 @@ figure();
 [feat1_x,feat1_y] = harris(original_im, 2.7);
 imshow(original_im), hold on, plot(feat1_y,feat1_x,'r+'); hold off;
 % Take 4 feature points beloging to parallel lines in order to find another vanishing point
-stop_point1 = [320; 111];
-stop_point2 = [387; 117];
-plate_point1 = [228; 365];
-plate_point2 = [300; 389];
+stop_point1 =  [320; 111]; %[306; 365];
+stop_point2 =  [387; 117]; %[229; 341];
+plate_point1 = [303; 393]; %[228; 365];
+plate_point2 = [226; 367]; %[300; 389];
 
 line_lights = cross( [stop_point1; 1], [stop_point2; 1] );
 line_plate = cross( [plate_point1; 1], [plate_point2; 1] );
@@ -312,8 +316,8 @@ K = [fx, 0, u0; ...
 
 % Compute the rows of R and normalize each one:
 r1 = K \ vanish_pointx; r1 = r1/norm(r1);
-%r2 = K \ vanish_pointy; r2 = r2/norm(r2);
 r3 = K \ vanish_pointz; r3 = r3/norm(r3);
+%r2 = K \ vanish_pointy; r2 = r2/norm(r2);
 % Last column can be found by cross product by the other two
 r2 = cross(r3,r1);
 plate_center = [262; 365; 1];
