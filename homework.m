@@ -260,7 +260,7 @@ ratio = norm( a-c, 2) / norm( a-b, 2)
 %% Detect the features
 % Get some features in the image using Harris method
 figure();
-[feat1_x,feat1_y] = harris(gray_im, 8);
+[feat1_x,feat1_y] = harris(gray_im, 4, 20);
 imshow(original_im), hold on, plot(feat1_y,feat1_x,'r+'); hold off;
 %%
 % Take 4 feature points beloging to parallel lines in order to find another vanishing point
@@ -314,16 +314,8 @@ K = [fx, 0, u0; ...
 % backprojection. We fix the world reference frame at the center of the car
 % plate, with the y-axis contained in the vertical symmetry plane.
 % We can find the rotation matrix of the camera with respect to the world
-% reference frame. We can exploit again the vanishing points, since
-% (assuming that $v_x$ is an image point and $V_x$ is the direction of the
-% x-axis in the scene):
-%
-% $$ v_x = P*V_x $$
-% $$ v_x = K*\begin{pmatrix}R & t\end{pmatrix}*\begin{pmatrix}1 \\ 0 \\ 0 \\ 0\end{pmatrix} $$
-% $$ v_x = K*\begin{pmatrix}r1 & r2 & r3 & t\end{pmatrix}*\begin{pmatrix}1 \\ 0 \\ 0 \\ 0\end{pmatrix} $$
-% $$ v_x = K*r1 $$
-% $$ r1 = K^{-1}*v_x $$
-% 
+% reference frame. We can exploit again the vanishing points to find the
+% columns of R.
 
 % Compute the rows of R and normalize each one:
 r1 = K \ vanish_pointx; r1 = r1/norm(r1);

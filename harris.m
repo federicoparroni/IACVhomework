@@ -1,4 +1,4 @@
-function [loc_x,loc_y] = harris(img, sigma)
+function [loc_x,loc_y] = harris(img, sigma, border_margin)
 % harris Find features in an image using Harris method
 
     % Derivative masks
@@ -19,11 +19,10 @@ function [loc_x,loc_y] = harris(img, sigma)
     cm = (Ix2.*Iy2 - Ixy.^2)./(Ix2 + Iy2 + eps);
 
     % Set to 0 near the boundaries
-    BORDER=8;
-    cm(1:BORDER,:)=0;
-    cm(end-BORDER:end,:)=0;
-    cm(:,end-BORDER:end)=0;
-    cm(:,1:BORDER)=0;
+    cm(1:border_margin,:)=0;
+    cm(end-border_margin:end,:)=0;
+    cm(:,end-border_margin:end)=0;
+    cm(:,1:border_margin)=0;
 
     % Threshold the cim
     T=mean(cm(:));
