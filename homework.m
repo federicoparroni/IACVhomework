@@ -7,11 +7,10 @@ close all; clear all; clc;
 %% 1. Ellipsis detection
 % Load the original image, resize for faster computations and convert it
 % to grayscale
-scale_factor = 4;
-original_im = rgb2gray(imresize(imread('Image1.jpg'), 1/scale_factor));
-%im_width = length(original_im);
-norm_f = max((size(original_im)))*scale_factor;
-norm_mx = diag([1/norm_factor, 1/norm_factor, 1]);
+original_im = imread('Image1.jpg');
+
+norm_f = max((size(original_im)));
+norm_mx = diag([1/norm_f, 1/norm_f, 1]);
 
 maxw = length(original_im) * 1.2;   % used to draw lines over the image
 
@@ -21,12 +20,16 @@ figure(); imshow(original_im); title('Original image');
 % As first, enhance the contrast of the image by remapping pixels
 % intensities. We will apply 2 different filters to detect both wheels of
 % the car
+gray_im = rgb2gray(original_im);
+scale_factor = 4;
+resized_gray_im = imresize(gray_im, 1/scale_factor);
+
 curves = uint8([zeros(1,60) linspace(0,255,16) repelem(255,180)]);
 figure(); plot(0:255, curves);
 xlabel('original pixel intensity'); ylabel('transformed pixel intensity');
 title('Preprocessing');
 
-preprocessed_im = intlut(original_im, curves);
+preprocessed_im = intlut(resized_gray_im, curves);
 figure(); imshow(preprocessed_im); title('Preprocessed image');
 
 % Filter 1: binarize the preprocessed image with a global
@@ -38,10 +41,10 @@ imf1 = bwmorph(imf1,'remove');
 
 % Filter 2: binarize again the original image, but with different
 % threshold values computed by changing the neighborhood size
-threshold1 = adaptthresh(original_im, 0.35, 'ForegroundPolarity','dark');
-threshold2 = adaptthresh(original_im, 0.35, 'NeighborhoodSize',13);
-t1 = uint8(imbinarize(original_im, threshold1));
-t2 = uint8(imbinarize(original_im, threshold2));
+threshold1 = adaptthresh(preprocessed_im, 0.35, 'ForegroundPolarity','dark');
+threshold2 = adaptthresh(preprocessed_im, 0.35, 'NeighborhoodSize',13);
+t1 = uint8(imbinarize(preprocessed_im, threshold1));
+t2 = uint8(imbinarize(preprocessed_im, threshold2));
 % Sum the thresholded images, in this way we can select white parts in
 % all the thresholded images
 imf2 = preprocessed_im + t1 + t2;
@@ -65,7 +68,6 @@ s1 = s1(arrayfun(@(x) x.MajorAxisLength < 120 && x.MajorAxisLength > 20 ...
                    && x.MinorAxisLength < 80 && x.MajorAxisLength > 20 ...
                    && (x.Orientation < -80 && x.Orientation > -90 ...
                    || x.Orientation < 78 && x.Orientation > 72), s1));
-
 s2 = s2(arrayfun(@(x) x.MajorAxisLength < 120 && x.MajorAxisLength > 110, s2));
 
 % Draw the ellipsis of interest
@@ -80,9 +82,13 @@ for k=1:length(s2)
 end
 
 ellipsis = [s1; s2];
-figure(); imshow(original_im); title('Ellipsis of interest');
+figure(); imshow(resized_gray_im); title('Ellipsis of interest');
 for k=1:length(ellipsis)
     drawEllipse(ellipsis(k),t);
+    % normalize the ellipsis
+    ellipsis(k).Centroid = ellipsis(k).Centroid / norm_f * 4;
+    ellipsis(k).MajorAxisLength = ellipsis(k).MajorAxisLength / norm_f * 4;
+    ellipsis(k).MinorAxisLength = ellipsis(k).MinorAxisLength / norm_f * 4;
 end
 clear s1; clear s2; clear t;
 
@@ -125,11 +131,13 @@ dual_wheel_post_coeffs = conicCoeffFromMatrix(inv(conicMatrixFromCoeff(wheel_pos
 % Get the 4 tangent lines and plot them with different colors
 tangent_lines = intersectsconics(dual_wheel_ant_coeffs,dual_wheel_post_coeffs);
 % Plot the 4 tangent lines
+figure(); imshow(gray_im);
 styles=['r-','m-','b-','y-']; widths=[1 2 2 1];
 for k=1:length(tangent_lines)
-    plotLine(tangent_lines(k,1),tangent_lines(k,2),1,[0 maxw], styles(k), widths(k));
+    line = [tangent_lines(k,:), 1] * norm_mx;
+    plotLine(line(1),line(2),1,[0 maxw], styles(k), widths(k));
 end
-clear styles; clear widths; clear k;
+clear line; clear styles; clear widths; clear k;
 
 %% 2.1.1 Intersect lines and conics
 % Intersects lines and conics
@@ -163,19 +171,19 @@ ant_wheel_points = intersectsconics(wheel_ant_coeffs, [0 0 0 middle_line]);
 
 % Plot all tangency and vanishing points and lines
 hold on;
-plot(upperwheelpoint1(1),upperwheelpoint1(2),'m^','MarkerSize',6,'HandleVisibility','off');
-plot(lowerwheelpoint1(1),lowerwheelpoint1(2),'m^','MarkerSize',6,'HandleVisibility','off');
-plot(upperwheelpoint2(1),upperwheelpoint2(2),'m^','MarkerSize',6,'HandleVisibility','off');
-plot(lowerwheelpoint2(1),lowerwheelpoint2(2),'m^','MarkerSize',6,'HandleVisibility','off');
-plot(middle_point(1),middle_point(2),'r^','MarkerSize',6,'HandleVisibility','off');
-plot(vanish_pointz(1),vanish_pointz(2),'b*','MarkerSize',6,'HandleVisibility','off');
-plot(vanish_pointy(1),vanish_pointy(2),'b*','MarkerSize',6,'HandleVisibility','off');
-plot(ant_wheel_points(1,1),ant_wheel_points(1,2),'r*','MarkerSize',6,'HandleVisibility','off');
-plot(ant_wheel_points(2,1),ant_wheel_points(2,2),'r*','MarkerSize',6,'HandleVisibility','off');
-plot(post_wheel_points(1,1),post_wheel_points(1,2),'r*','MarkerSize',6,'HandleVisibility','off');
-plot(post_wheel_points(2,1),post_wheel_points(2,2),'r*','MarkerSize',6,'HandleVisibility','off');
-plotLine(line_vert_post_wheel(1),line_vert_post_wheel(2),line_vert_post_wheel(3),[0 maxw],'-',2);
-plotLine(line_vert_ant_wheel(1),line_vert_ant_wheel(2),line_vert_ant_wheel(3),[0 maxw],'-',2);
+plot(upperwheelpoint1(1)*norm_f,upperwheelpoint1(2)*norm_f,'m^','MarkerSize',6,'HandleVisibility','off');
+plot(lowerwheelpoint1(1)*norm_f,lowerwheelpoint1(2)*norm_f,'m^','MarkerSize',6,'HandleVisibility','off');
+plot(upperwheelpoint2(1)*norm_f,upperwheelpoint2(2)*norm_f,'m^','MarkerSize',6,'HandleVisibility','off');
+plot(lowerwheelpoint2(1)*norm_f,lowerwheelpoint2(2)*norm_f,'m^','MarkerSize',6,'HandleVisibility','off');
+plot(middle_point(1)*norm_f,middle_point(2)*norm_f,'r^','MarkerSize',6,'HandleVisibility','off');
+plot(vanish_pointz(1)*norm_f,vanish_pointz(2)*norm_f,'b*','MarkerSize',6,'HandleVisibility','off');
+plot(vanish_pointy(1)*norm_f,vanish_pointy(2)*norm_f,'b*','MarkerSize',6,'HandleVisibility','off');
+plot(ant_wheel_points(1,1)*norm_f,ant_wheel_points(1,2)*norm_f,'r*','MarkerSize',6,'HandleVisibility','off');
+plot(ant_wheel_points(2,1)*norm_f,ant_wheel_points(2,2)*norm_f,'r*','MarkerSize',6,'HandleVisibility','off');
+plot(post_wheel_points(1,1)*norm_f,post_wheel_points(1,2)*norm_f,'r*','MarkerSize',6,'HandleVisibility','off');
+plot(post_wheel_points(2,1)*norm_f,post_wheel_points(2,2)*norm_f,'r*','MarkerSize',6,'HandleVisibility','off');
+plotLine(line_vert_post_wheel(1)*norm_f,line_vert_post_wheel(2)*norm_f,line_vert_post_wheel(3)*norm_f,[0 maxw],'-',2);
+plotLine(line_vert_ant_wheel(1)*norm_f,line_vert_ant_wheel(2)*norm_f,line_vert_ant_wheel(3)*norm_f,[0 maxw],'-',2);
 
 % Get the image of the line at the infinity
 inf_point1 = cross( lowertangentline, uppertangentline );
@@ -203,7 +211,7 @@ image_dual_conic = I*J.' + J*I.';
 [~, DC, H] = svd(image_dual_conic);
 normalization = sqrt(DC); normalization(3,3)=1;
 %H_norm = inv(normalization*H);
-H = normalization * H;
+H_n = normalization * H;
 %H = inv(H);
 
 % Find the inverse mapping of the four intersection points
@@ -252,22 +260,24 @@ ratio = norm( a-c, 2) / norm( a-b, 2)
 %% Detect the features
 % Get some features in the image using Harris method
 figure();
-[feat1_x,feat1_y] = harris(original_im, 2.7);
+[feat1_x,feat1_y] = harris(gray_im, 2.7);
 imshow(original_im), hold on, plot(feat1_y,feat1_x,'r+'); hold off;
+%%
 % Take 4 feature points beloging to parallel lines in order to find another vanishing point
-stop_point1 =  [320; 111]; %[306; 365];
-stop_point2 =  [387; 117]; %[229; 341];
-plate_point1 = [303; 393]; %[228; 365];
-plate_point2 = [226; 367]; %[300; 389];
+stop_point1 =  [1549, 464, 1];
+stop_point2 =  [1281, 440, 1];
+plate_point1 = [1207, 1569, 1];
+plate_point2 = [930, 1478, 1];
 
-line_lights = cross( [stop_point1; 1], [stop_point2; 1] );
-line_plate = cross( [plate_point1; 1], [plate_point2; 1] );
+% Find the parallel lines through these pairs of point and normalize them
+line_lights = cross( stop_point1 * norm_mx, stop_point2 * norm_mx );
+line_plate = cross( plate_point1 * norm_mx, plate_point2 * norm_mx );
 
 plotLine(line_lights(1), line_lights(2), line_lights(3), [-maxw maxw],'g-',2);
 plotLine(line_plate(1), line_plate(2), line_plate(3), [-maxw maxw],'g-',2);
 hold on;
 vanish_pointx = cross( line_lights, line_plate );
-vanish_pointx = vanish_pointx / vanish_pointx(3);
+vanish_pointx = vanish_pointx.' / vanish_pointx(3);
 plot(vanish_pointx(1),vanish_pointx(2),'r*','MarkerSize',6,'HandleVisibility','off');
 
 % Get the image of the absolute conic (w) from the constraints on
@@ -290,6 +300,7 @@ fy = real(double(res.fy)); fy = fy(fy > 0); fy = fy(1);
 u0 = real(double(res.u0)); u0 = u0(1);
 v0 = real(double(res.v0)); v0 = v0(1);
 clear K, clear eqs, clear res;
+% Print the matrix K (normalized)
 K = [fx, 0, u0; ...
      0, fy, v0; ...
      0, 0, 1]
@@ -320,7 +331,7 @@ r3 = K \ vanish_pointz; r3 = r3/norm(r3);
 %r2 = K \ vanish_pointy; r2 = r2/norm(r2);
 % Last column can be found by cross product by the other two
 r2 = cross(r3,r1);
-plate_center = [262; 365; 1];
+plate_center = transpose([1033, 1513, 1] * norm_mx);
 t = K \ plate_center;
 %t = [0; 0; 0];
 
@@ -331,13 +342,13 @@ M = P(:,1:3);
 O = null(P); O = O/O(4);
 
 % Get some symmetric features
-plate_left = [218; 351; 1];
-plate_right = [315; 383; 1];
+plate_left = transpose([901, 1465, 1] * norm_mx);
+plate_right = transpose([1207, 1570, 1] * norm_mx);
 % use stop points found before
-stop_left = [stop_point1; 1];
-stop_right = [stop_point2; 1];
-light_right = [328; 262; 1];
-light_left = [216; 236; 1];
+stop_left = transpose(stop_point1 * norm_mx);
+stop_right = transpose(stop_point2 * norm_mx);
+light_left = transpose([777, 936, 1] * norm_mx);
+light_right = transpose([1521, 1116, 1] * norm_mx);
 %stem_center = [258; 259; 1];
 
 % Find the backprojection rays of some symmetric points:
