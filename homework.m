@@ -135,7 +135,7 @@ figure(); imshow(gray_im);
 styles=['r-','m-','b-','y-']; widths=[1 2 2 1];
 for k=1:length(tangent_lines)
     line = [tangent_lines(k,:), 1] * norm_mx;
-    plotLine(line(1),line(2),1,[0 maxw], styles(k), widths(k));
+    plotLine(line,[0 maxw], styles(k), widths(k));
 end
 clear line; clear styles; clear widths; clear k;
 
@@ -182,14 +182,14 @@ plot(ant_wheel_points(1,1)*norm_f,ant_wheel_points(1,2)*norm_f,'r*','MarkerSize'
 plot(ant_wheel_points(2,1)*norm_f,ant_wheel_points(2,2)*norm_f,'r*','MarkerSize',6,'HandleVisibility','off');
 plot(post_wheel_points(1,1)*norm_f,post_wheel_points(1,2)*norm_f,'r*','MarkerSize',6,'HandleVisibility','off');
 plot(post_wheel_points(2,1)*norm_f,post_wheel_points(2,2)*norm_f,'r*','MarkerSize',6,'HandleVisibility','off');
-plotLine(line_vert_post_wheel(1)*norm_f,line_vert_post_wheel(2)*norm_f,line_vert_post_wheel(3)*norm_f,[0 maxw],'-',2);
-plotLine(line_vert_ant_wheel(1)*norm_f,line_vert_ant_wheel(2)*norm_f,line_vert_ant_wheel(3)*norm_f,[0 maxw],'-',2);
+plotLine(line_vert_post_wheel * norm_mx, [0 maxw],'-',2);
+plotLine(line_vert_ant_wheel * norm_mx, [0 maxw],'-',2);
 
 % Get the image of the line at the infinity
 inf_point1 = cross( lowertangentline, uppertangentline );
 inf_point2 = cross( line_vert_post_wheel, line_vert_ant_wheel );
 line_infinity = cross( inf_point1, inf_point2 );
-plotLine(line_infinity(1),line_infinity(2),line_infinity(3),[0 maxw], '-', 2);
+plotLine(line_infinity * norm_mx, [0 maxw], '-', 2);
 % Get the image of the circular points by intersecting the ellipsis and the
 % line at the infinity
 circ_point1 = intersectsconics(wheel_post_coeffs, [0 0 0 line_infinity]);
@@ -199,9 +199,9 @@ legend('line1','line2','line3','line4', 'vertical1','vertical2', 'infinity');
 
 hold off;
 
-%% 2.2 Rectify the image using the image of the absolute conic.
-% The image of the absolute conic can be computed by multiplying the images
-% of the circular points:
+%% 2.2 Rectify the image using the image of the degenerate dual conic.
+% The image of the degenerate dual conic can be computed by multiplying the
+% images of the circular points:
 % 
 % $\omega_{\infty} = I*J' + J*I'$
 % 
@@ -260,7 +260,7 @@ ratio = norm( a-c, 2) / norm( a-b, 2)
 %% Detect the features
 % Get some features in the image using Harris method
 figure();
-[feat1_x,feat1_y] = harris(gray_im, 2.7);
+[feat1_x,feat1_y] = harris(gray_im, 8);
 imshow(original_im), hold on, plot(feat1_y,feat1_x,'r+'); hold off;
 %%
 % Take 4 feature points beloging to parallel lines in order to find another vanishing point
@@ -273,12 +273,12 @@ plate_point2 = [930, 1478, 1];
 line_lights = cross( stop_point1 * norm_mx, stop_point2 * norm_mx );
 line_plate = cross( plate_point1 * norm_mx, plate_point2 * norm_mx );
 
-plotLine(line_lights(1), line_lights(2), line_lights(3), [-maxw maxw],'g-',2);
-plotLine(line_plate(1), line_plate(2), line_plate(3), [-maxw maxw],'g-',2);
+plotLine(line_lights * norm_mx, [-maxw maxw],'g-',2);
+plotLine(line_plate * norm_mx, [-maxw maxw],'g-',2);
 hold on;
 vanish_pointx = cross( line_lights, line_plate );
 vanish_pointx = vanish_pointx.' / vanish_pointx(3);
-plot(vanish_pointx(1),vanish_pointx(2),'r*','MarkerSize',6,'HandleVisibility','off');
+plot(vanish_pointx(1)*norm_mx,vanish_pointx(2)*norm_mx,'r*','MarkerSize',6,'HandleVisibility','off');
 
 % Get the image of the absolute conic (w) from the constraints on
 % orthogonal directions
