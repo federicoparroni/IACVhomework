@@ -210,11 +210,10 @@ J = [circ_points(2,:)'; 1];
 image_dual_conic = I*J.' + J*I.';
 [~, DC, H] = svd(image_dual_conic);
 normalization = sqrt(DC); normalization(3,3)=1;
-%H_norm = inv(normalization*H);
 H_n = normalization * H;
-%H = inv(H);
+H = inv(H_n);
 
-% Find the inverse mapping of the four intersection points
+% Find the rectified intersection points
 a = H \ [post_wheel_points(2,:), 1]'; a = a/a(3);
 b = H \ [post_wheel_points(1,:), 1]'; b = b/b(3);
 c = H \ [ant_wheel_points(2,:), 1]'; c = c/c(3);
@@ -223,16 +222,21 @@ d = H \ [ant_wheel_points(1,:), 1]'; d = d/d(3);
 % Compute the ratio distance - diameter from the rectified points
 ratio = norm( a-c, 2) / norm( a-b, 2)
 
-%figure();
-%plot(a(1),a(2),'o'); plot(b(1),b(2),'x');
-%plot(c(1),c(2),'h'); plot(d(1),d(2),'p');
-%title('Inverse mapping of 4 wheel keypoints');
+figure();
+hold on;
+plot(a(1),a(2),'or'); plot(b(1),b(2),'or');
+plot(c(1),c(2),'ob'); plot(d(1),d(2),'ob');
+hold off;
+title('Rectification of 4 wheel keypoints');
 
-% 
-%rectified_im = imwarp(original_im, projective2d(H'));
+% A = [H(1,1:2) / norm(H(1,1:2)); H(2,1:2) / norm(H(2,1:2))];
+% v = H(3,:) / norm_mx;
+% c = H(1:2,3) * norm_f;
+% pt = projective2d( transpose( [A, c; v] ) );
+% rectified_im = imwarp(original_im, pt);
 
-%figure(5);
-% size_im = size(preprocessed_im);
+% figure(5);
+% size_im = size(resized_gray_im);
 % rectified_im = zeros(size_im);
 % for i=1:size_im(1)
 %     for j=1:size_im(2)
@@ -255,7 +259,8 @@ ratio = norm( a-c, 2) / norm( a-b, 2)
 %         rectified_im(i,j) = preprocessed_im(new_index(1), new_index(2));
 %     end
 % end
-%imshow(rectified_im);
+
+% figure(); imshow(rectified_im);
 
 %% Detect the features
 % Get some features in the image using Harris method
@@ -263,6 +268,7 @@ figure();
 [feat1_x,feat1_y] = harris(gray_im, 4, 20);
 imshow(original_im), hold on, plot(feat1_y,feat1_x,'r+'); hold off;
 %%
+
 % Take 4 feature points beloging to parallel lines in order to find another vanishing point
 stop_point1 =  [1549, 464, 1];
 stop_point2 =  [1281, 440, 1];
@@ -314,7 +320,7 @@ K = [fx, 0, u0; ...
 % backprojection. We fix the world reference frame at the center of the car
 % plate, with the y-axis contained in the vertical symmetry plane.
 % We can find the rotation matrix of the camera with respect to the world
-% reference frame. We can exploit again the vanishing points to find the
+% reference frame. We can exploit the vanishing points to find the
 % columns of R.
 
 % Compute the rows of R and normalize each one:
@@ -341,7 +347,6 @@ stop_left = transpose(stop_point1 * norm_mx);
 stop_right = transpose(stop_point2 * norm_mx);
 light_left = transpose([777, 936, 1] * norm_mx);
 light_right = transpose([1521, 1116, 1] * norm_mx);
-%stem_center = [258; 259; 1];
 
 % Find the backprojection rays of some symmetric points:
 viewing_ray_platel = M \ plate_left;
