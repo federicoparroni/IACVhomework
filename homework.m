@@ -385,8 +385,6 @@ plotLine3([0,0,0],[0,0.5,0],'g',2);
 plotLine3([0,0,0],[0,0,0.5],'b',2);
 % viewpoint
 plotPoint3(O,'m^',8);
-% camera frame origin
-plotPoint3(-t,'kh',1);
 
 drawVRay(M,O,plate_left, 'c');
 drawVRay(M,O,plate_right, 'c');
@@ -414,15 +412,28 @@ plotPoint3(symm_point_lightr,'b^',6);
 plotPoint3(symm_point_stopl,'rs',6);
 plotPoint3(symm_point_stopr,'rs',6);
 
-hold off;
 pbaspect([1,1,1]);
 grid on;
 title('3D Reconstruction')
 xlabel('x'); ylabel('y'); zlabel('z');
-legend('origin','x axis','y axis','z axis', 'viewpoint','cam frame', 'left plate ray','right plate ray','left light ray','right light ray','left stop ray','right stop ray', 'car back plane','symmetry plane', 'left plate','right plate','left light','right light','left stop','right stop');
+legend('origin','x axis','y axis','z axis', 'viewpoint', ...
+         'left plate ray','right plate ray','left light ray', ...
+         'right light ray','left stop ray','right stop ray', ...
+         'car back plane','symmetry plane', ...
+         'left plate','right plate','left light','right light', ...
+         'left stop','right stop');
 set(gca, 'CameraPosition', [0,1,-1]);
 
 
+%% Localize the camera in the world frame
+% We know R and t from camera to world. We need to compute R and t from
+% world to camera.
 
+R_wc = inv(R);
+t_wc = -R_wc*t;
 
+M = [R_wc, -t; 0 0 0 1];
+t_primo = M*[0; 0; 0; 1];
+
+plotCamera('Location',t_wc,'Orientation',R_wc,'Size',0.1);
 
