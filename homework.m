@@ -330,8 +330,8 @@ r3 = K \ vanish_pointz; r3 = r3/norm(r3);
 % Last column can be found by cross product by the other two
 r2 = cross(r3,r1);
 plate_center = transpose([1033, 1513, 1] * norm_mx);
-t = K \ plate_center;
-%t = [0; 0; 0];
+%t = K \ plate_center;
+t = [0; 0; 0];
 
 R = [r1 r2 r3];
 P = K*[R t];
@@ -355,6 +355,11 @@ viewing_ray_lightl = M \ light_left;
 viewing_ray_lightr = M \ light_right;
 viewing_ray_stopl = M \ stop_left;
 viewing_ray_stopr = M \ stop_right;
+
+% Find the origin of the new reference frame
+z_dist = 1;
+[symm_point_platel,symm_point_plater,neworigin] = findWorldFrameOrigin(viewing_ray_platel,viewing_ray_plater,O, z_dist);
+t2 = neworigin;
 
 % Since we placed the origin of the world frame in the symmetry plane, its
 % equation will be x=0. Knowning the viewing rays of the pairs of the projected
@@ -384,40 +389,41 @@ plotLine3([0,0,0],[0.5,0,0],'r',2);
 plotLine3([0,0,0],[0,0.5,0],'g',2);
 plotLine3([0,0,0],[0,0,0.5],'b',2);
 % viewpoint
-plotPoint3(O,'m^',8);
+plotPoint3(O,'k^',8);
+% new origin in the symmetry plane
+plotPoint3(neworigin,'r^',8);
 
-drawVRay(M,O,plate_left, 'c');
-drawVRay(M,O,plate_right, 'c');
+drawVRay(M,O,plate_left, 'c', 2);
+drawVRay(M,O,plate_right, 'c', 2);
 
-drawVRay(M,O,light_left, 'y');
-drawVRay(M,O,light_right, 'y');
+drawVRay(M,O,light_left, 'm', 2);
+drawVRay(M,O,light_right, 'm', 2);
 
-drawVRay(M,O,stop_left, 'r');
-drawVRay(M,O,stop_right, 'r');
+drawVRay(M,O,stop_left, 'g', 2);
+drawVRay(M,O,stop_right, 'g', 2);
 
 % planes z=0 and x=0
-drawPlane([0; 0; 1; 0], 'k');
-drawPlane([1; 0; 0; 0], 'c');
+drawPlane([0; 0; 1; -z_dist], 'k', 3);
+drawPlane([1; 0; 0; -neworigin(1)], 'y', 2);
 
 % Solve the system to find the pairs of symmetric features
-[symm_point_platel,symm_point_plater] = findSymmetricFeatures(viewing_ray_platel, viewing_ray_plater, O);
-[symm_point_lightl,symm_point_lightr] = findSymmetricFeatures(viewing_ray_lightl, viewing_ray_lightr, O);
-[symm_point_stopl,symm_point_stopr] = findSymmetricFeatures(viewing_ray_stopl, viewing_ray_stopr, O);
+[symm_point_lightl,symm_point_lightr] = findSymmetricFeatures(viewing_ray_lightl, viewing_ray_lightr, O, neworigin(1));
+[symm_point_stopl,symm_point_stopr] = findSymmetricFeatures(viewing_ray_stopl, viewing_ray_stopr, O, neworigin(1));
 
 % Plot the 3D locations of the symmetric features
-plotPoint3(symm_point_platel,'mp',8);
-plotPoint3(symm_point_plater,'mp',8);
-plotPoint3(symm_point_lightl,'b^',6);
-plotPoint3(symm_point_lightr,'b^',6);
-plotPoint3(symm_point_stopl,'rs',6);
-plotPoint3(symm_point_stopr,'rs',6);
+plotPoint3(symm_point_platel,'cp',8);
+plotPoint3(symm_point_plater,'cp',8);
+plotPoint3(symm_point_lightl,'m^',6);
+plotPoint3(symm_point_lightr,'m^',6);
+plotPoint3(symm_point_stopl,'gs',6);
+plotPoint3(symm_point_stopr,'gs',6);
 
 plotCamera('Location',O(1:3),'Orientation',R,'Size',0.1);
 
 pbaspect([1,1,1]);
 grid on; title('3D Reconstruction');
 xlabel('x'); ylabel('y'); zlabel('z');
-legend('origin','x axis','y axis','z axis', 'viewpoint', ...
+legend('origin','x axis','y axis','z axis', 'viewpoint', 'car frame origin', ...
          'left plate ray','right plate ray','left light ray', ...
          'right light ray','left stop ray','right stop ray', ...
          'car back plane','symmetry plane', ...

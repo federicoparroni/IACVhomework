@@ -1,7 +1,8 @@
-function [p1,p2] = findSymmetricFeatures(ray1,ray2,O, symm_plane)
-%FINDSYMMETRICFEATURES Find 2 points belonging to the rays, passing through
-% O, symmetric with respect to the plane x=symm_plane
-%   
+function [p1,p2,origin] = findWorldFrameOrigin(ray1,ray2,O,back_plane)
+%FINDWORLDFRAMEORIGIN Find the origin of the world frame, considering the
+%midpoint of the intersection points between 2 rays of symmetric points and
+%the plane z=back_plane (i.e. the plane containing the car plate)
+%
     syms x1, syms y1, syms z1;
     syms x2, syms y2, syms z2;
     
@@ -13,8 +14,8 @@ function [p1,p2] = findSymmetricFeatures(ray1,ray2,O, symm_plane)
              (z1-z0)*m1 - (y1-y0)*n1;
              (x2-x0)*m2 - (y2-y0)*l2;
              (z2-z0)*m2 - (y2-y0)*n2;
-             (x1 + x2)/2 - symm_plane;
-             z1 - z2;
+             z1 - back_plane;
+             z2 - back_plane;
            ];
     res = solve(eqns);
     
@@ -25,5 +26,6 @@ function [p1,p2] = findSymmetricFeatures(ray1,ray2,O, symm_plane)
     p2(1) = double(res.x2);
     p2(2) = double(res.y2);
     p2(3) = double(res.z2);
+    
+    origin = (p1+p2)/2;
 end
-
