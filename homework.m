@@ -220,7 +220,7 @@ c = H \ [ant_wheel_points(2,:), 1]'; c = c/c(3);
 d = H \ [ant_wheel_points(1,:), 1]'; d = d/d(3);
 
 % Compute the ratio distance - diameter from the rectified points
-ratio = norm( a-c, 2) / norm( a-b, 2)
+ratio = norm( a-b, 2) / norm( a-c, 2)
 
 figure();
 hold on;
@@ -412,9 +412,10 @@ plotPoint3(symm_point_lightr,'b^',6);
 plotPoint3(symm_point_stopl,'rs',6);
 plotPoint3(symm_point_stopr,'rs',6);
 
+plotCamera('Location',O(1:3),'Orientation',R,'Size',0.1);
+
 pbaspect([1,1,1]);
-grid on;
-title('3D Reconstruction')
+grid on; title('3D Reconstruction');
 xlabel('x'); ylabel('y'); zlabel('z');
 legend('origin','x axis','y axis','z axis', 'viewpoint', ...
          'left plate ray','right plate ray','left light ray', ...
@@ -423,17 +424,43 @@ legend('origin','x axis','y axis','z axis', 'viewpoint', ...
          'left plate','right plate','left light','right light', ...
          'left stop','right stop');
 set(gca, 'CameraPosition', [0,1,-1]);
-
+hold off;
 
 %% Localize the camera in the world frame
 % We know R and t from camera to world. We need to compute R and t from
 % world to camera.
 
-R_wc = inv(R);
-t_wc = -R_wc*t;
+%[cacca1, cacca2, origin] = findWorldFrameOrigin(viewing_ray_platel,viewing_ray_plater,O,1);
 
-M = [R_wc, -t; 0 0 0 1];
+R_wc = inv(R);
+%t_wc = -R_wc*t;
+
+M = inv([R_wc, -t; 0 0 0 1]);
 t_primo = M*[0; 0; 0; 1];
 
-plotCamera('Location',t_wc,'Orientation',R_wc,'Size',0.1);
+cam_plate_1 = M * [symm_point_platel, 1].';
+cam_plate_2 = M * [symm_point_plater, 1].';
+cam_light_1 = M * [symm_point_lightl, 1].';
+cam_light_2 = M * [symm_point_lightr, 1].';
+cam_stop_1 = M * [symm_point_stopl, 1].';
+cam_stop_2 = M * [symm_point_stopr, 1].';
 
+figure(); hold on; grid on;
+% versors
+plotLine3([0,0,0],[0.5,0,0],'r',2);
+plotLine3([0,0,0],[0,0.5,0],'g',2);
+plotLine3([0,0,0],[0,0,0.5],'b',2);
+
+plotPoint3([0,0,0], 'rh', 6);
+%plotCamera('Location',[0; 0; 0],'Orientation',eye(3),'Size',0.1);
+
+plotPoint3(cam_plate_1, 'mp', 6);
+plotPoint3(cam_plate_2, 'mp', 6);
+plotPoint3(cam_light_1, 'b^', 6);
+plotPoint3(cam_light_2, 'b^', 6);
+plotPoint3(cam_stop_1, 'rs', 6);
+plotPoint3(cam_stop_2, 'rs', 6);
+
+title('Camera localization');
+set(gca, 'CameraPosition', [0,1,-1]);
+xlabel('x'); ylabel('y'); zlabel('z');
