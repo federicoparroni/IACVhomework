@@ -1,4 +1,4 @@
-function [] = drawPlane(coeff, color)
+function [] = drawPlane(coeff, color, size)
 %DRAWPLANE Draw a 3d plane
 %   
     a = coeff(1);
@@ -7,10 +7,10 @@ function [] = drawPlane(coeff, color)
     d = coeff(4);
 
     if c==0
-        [y,z] = meshgrid(-1:0.1:1);
+        [y,z] = meshgrid(-size:0.1:size);
         x = -1/a*(b*y + c*z + d);
     else
-        [x,y] = meshgrid(-1:0.1:1);
+        [x,y] = meshgrid(-size:0.1:size);
         z = -1/c*(a*x + b*y + d);
     end
     

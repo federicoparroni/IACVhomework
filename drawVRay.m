@@ -1,10 +1,10 @@
-function [] = drawVRay(M, O, p, style)
+function [] = drawVRay(M, O, p, style, length_limit)
 %DRAWVRAY Draw the viewing ray from viewpoint O and projecting into p of
 %camera with rotation matrix M=K*R
 %
     ray_direction = M \ p;
     
-    x = [-1.5,1.5];
+    x = [-length_limit,length_limit];
     ray = [ x;
         ray_direction(2)*(x-O(1))/ray_direction(1) + O(2);
         ray_direction(3)*(x-O(1))/ray_direction(1) + O(3)

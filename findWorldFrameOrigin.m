@@ -19,13 +19,13 @@ function [p1,p2,origin] = findWorldFrameOrigin(ray1,ray2,O,back_plane)
            ];
     res = solve(eqns);
     
-    p1(1) = double(res.x1);
-    p1(2) = double(res.y1);
-    p1(3) = double(res.z1);
+    p1 = [double(res.x1);
+          double(res.y1);
+          double(res.z1) ];
     
-    p2(1) = double(res.x2);
-    p2(2) = double(res.y2);
-    p2(3) = double(res.z2);
+    p2 = [double(res.x2);
+          double(res.y2);
+          double(res.z2) ];
     
     origin = (p1+p2)/2;
 end

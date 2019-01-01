@@ -43,11 +43,11 @@ imf1 = bwmorph(imf1,'remove');
 % threshold values computed by changing the neighborhood size
 threshold1 = adaptthresh(preprocessed_im, 0.35, 'ForegroundPolarity','dark');
 threshold2 = adaptthresh(preprocessed_im, 0.35, 'NeighborhoodSize',13);
-t1 = uint8(imbinarize(preprocessed_im, threshold1));
-t2 = uint8(imbinarize(preprocessed_im, threshold2));
+thr1 = uint8(imbinarize(preprocessed_im, threshold1));
+thr2 = uint8(imbinarize(preprocessed_im, threshold2));
 % Sum the thresholded images, in this way we can select white parts in
 % all the thresholded images
-imf2 = preprocessed_im + t1 + t2;
+imf2 = preprocessed_im + thr1 + thr2;
 
 % Dilate the filtered image to reduce black holes inside the wheel
 imf2 = imbinarize(imf2);
@@ -331,10 +331,11 @@ r3 = K \ vanish_pointz; r3 = r3/norm(r3);
 r2 = cross(r3,r1);
 plate_center = transpose([1033, 1513, 1] * norm_mx);
 %t = K \ plate_center;
-t = [0; 0; 0];
+% Initially we set t = 0
+t_0 = [0; 0; 0];
 
 R = [r1 r2 r3];
-P = K*[R t];
+P = K*[R t_0];
 M = P(:,1:3);
 
 O = null(P); O = O/O(4);
@@ -342,7 +343,7 @@ O = null(P); O = O/O(4);
 % Get some symmetric features
 plate_left = transpose([901, 1465, 1] * norm_mx);
 plate_right = transpose([1207, 1570, 1] * norm_mx);
-% use stop points found before
+% Use stop points found before
 stop_left = transpose(stop_point1 * norm_mx);
 stop_right = transpose(stop_point2 * norm_mx);
 light_left = transpose([777, 936, 1] * norm_mx);
@@ -359,27 +360,13 @@ viewing_ray_stopr = M \ stop_right;
 % Find the origin of the new reference frame
 z_dist = 1;
 [symm_point_platel,symm_point_plater,neworigin] = findWorldFrameOrigin(viewing_ray_platel,viewing_ray_plater,O, z_dist);
-t2 = neworigin;
+t_2 = neworigin.';
 
-% Since we placed the origin of the world frame in the symmetry plane, its
-% equation will be x=0. Knowning the viewing rays of the pairs of the projected
+% Knowning the viewing rays of the pairs of the projected
 % image points that were symmetric in the scene, we can find the original
 % 3D location by imposing that this points must be symmetric with respect
-% to the symmetry plane x=0 (so, they must be opposite x coordinate sign).
-% In addition, we also know that their y coordinates must be equal, again
-% for their symmetric relation. This is equivalent to solve the system:
-% 
-% $$ \frac{x_1-x_O}{l_1} = \frac{y_1-y_O}{m_1} = \frac{z_1-z_O}{n_1} $$
-%
-% $$ \frac{x_2-x_O}{l_2} = \frac{y_2-y_O}{m_2} = \frac{z_2-z_O}{n_2} $$
-%
-% $$ x_1 = -x_2 $$
-%
-% $$ z_1 = z_2 $$
-% 
-% where $d_1 = (l_1, m_1, n_1)$ and $d_2 = (l_2, m_2, n_2)$ are the viewing rays
-% passing though $P_1 = (x_1, y_1, z_1)$ and $P_2 = (x_2, y_2, z_2)$
-% respectively, and $O = (x_O, y_O, z_O)$.
+% to the symmetry plane found before. Everything is expressed in the
+% reference frame W0 (camera frame rotated by R).
 %
 figure();
 hold on;
@@ -421,7 +408,7 @@ plotPoint3(symm_point_stopr,'gs',6);
 plotCamera('Location',O(1:3),'Orientation',R,'Size',0.1);
 
 pbaspect([1,1,1]);
-grid on; title('3D Reconstruction');
+grid on; title('3D Reconstruction (in the reference frame W0)');
 xlabel('x'); ylabel('y'); zlabel('z');
 legend('origin','x axis','y axis','z axis', 'viewpoint', 'car frame origin', ...
          'left plate ray','right plate ray','left light ray', ...
@@ -432,24 +419,62 @@ legend('origin','x axis','y axis','z axis', 'viewpoint', 'car frame origin', ...
 set(gca, 'CameraPosition', [0,1,-1]);
 hold off;
 
+% We can express all the points in the reference frame W1 (with origin in
+% the symmetry plane of the car). We need to build the matrix T1 (that is a
+% pure translation of -neworigin).
+T1 = [eye(3) -neworigin; 0 0 0 1];
+
+symm_point_platel_W1 = T1*[symm_point_platel; 1];
+symm_point_plater_W1 = T1*[symm_point_plater; 1];
+symm_point_lightl_W1 = T1*[symm_point_lightl; 1];
+symm_point_lightr_W1 = T1*[symm_point_lightr; 1];
+symm_point_stopl_W1 = T1*[symm_point_stopl; 1];
+symm_point_stopr_W1 = T1*[symm_point_stopr; 1];
+
+% Replot all points in W1
+figure();
+hold on;
+plotPoint3([0,0,0],'wo',8);
+% versors
+plotLine3([0,0,0],[0.1,0,0],'r',2);
+plotLine3([0,0,0],[0,0.1,0],'g',2);
+plotLine3([0,0,0],[0,0,0.1],'b',2);
+% viewpoint and symmetric points
+plotPoint3(T1*O,'k^',8);
+plotPoint3(symm_point_platel_W1,'cp',8);
+plotPoint3(symm_point_plater_W1,'cp',8);
+plotPoint3(symm_point_lightl_W1,'m^',6);
+plotPoint3(symm_point_lightr_W1,'m^',6);
+plotPoint3(symm_point_stopl_W1,'gs',6);
+plotPoint3(symm_point_stopr_W1,'gs',6);
+
+pbaspect([1,1,1]);
+grid on; title('3D Reconstruction (in the reference frame W1)');
+legend('origin','x axis','y axis','z axis', 'viewpoint', ...
+         ... %'car back plane','symmetry plane', ...
+         'left plate','right plate','left light','right light', ...
+         'left stop','right stop');
+hold off;
+
 %% Localize the camera in the world frame
 % We know R and t from camera to world. We need to compute R and t from
 % world to camera.
 
-%[cacca1, cacca2, origin] = findWorldFrameOrigin(viewing_ray_platel,viewing_ray_plater,O,1);
+R_wc = R.';
+t_wc = -R*t_2;
 
-R_wc = inv(R);
-%t_wc = -R_wc*t;
+% Change of coordinate from t_0=[0,0,0] to t_2
+W_1 = [eye(3), t_2; 0 0 0 1];
+%M = inv([R, t_2; 0 0 0 1]);
+W_2 = [R_wc, t_wc; 0 0 0 1];
+t_primo = W_2*[0; 0; 0; 1];
 
-M = inv([R_wc, -t; 0 0 0 1]);
-t_primo = M*[0; 0; 0; 1];
-
-cam_plate_1 = M * [symm_point_platel, 1].';
-cam_plate_2 = M * [symm_point_plater, 1].';
-cam_light_1 = M * [symm_point_lightl, 1].';
-cam_light_2 = M * [symm_point_lightr, 1].';
-cam_stop_1 = M * [symm_point_stopl, 1].';
-cam_stop_2 = M * [symm_point_stopr, 1].';
+cam_plate_1 = W_2 * [symm_point_platel, 1].';
+cam_plate_2 = W_2 * [symm_point_plater, 1].';
+cam_light_1 = W_2 * [symm_point_lightl, 1].';
+cam_light_2 = W_2 * [symm_point_lightr, 1].';
+cam_stop_1 = W_2 * [symm_point_stopl, 1].';
+cam_stop_2 = W_2 * [symm_point_stopr, 1].';
 
 figure(); hold on; grid on;
 % versors
@@ -458,7 +483,8 @@ plotLine3([0,0,0],[0,0.5,0],'g',2);
 plotLine3([0,0,0],[0,0,0.5],'b',2);
 
 plotPoint3([0,0,0], 'rh', 6);
-%plotCamera('Location',[0; 0; 0],'Orientation',eye(3),'Size',0.1);
+plotPoint3(-R_wc*t_wc, 'k*', 6);
+%plotCamera('Location',-R_wc*t_wc,'Orientation',eye(3),'Size',0.1);
 
 plotPoint3(cam_plate_1, 'mp', 6);
 plotPoint3(cam_plate_2, 'mp', 6);
