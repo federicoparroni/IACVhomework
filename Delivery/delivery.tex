@@ -34,6 +34,7 @@ Now we can use \textit{regionprops} to get the parameters of some ellipsis in th
 \subsection{Feature detection}
 We can use the well-known Harris to extract features from the image. I used the value 2.7 for the standard deviation of the Gaussian filter (that controls the sensitivity of the filter) to avoid extracting too many and useless features.
 
+\newpage
 \section{Geometry}
 \subsection{Diameter of wheel and wheel-to-wheel distance ratio}
 The ratio can be found by computing the matrix $H_R$ such that, multiplied to an image point belonging to a plane, it gives back the rectified version of it. We can use $H_R$ to find the rectified wheels and then measure directly their diameters and distance in pixels. These are not the original measures (because we cannot find the real size with only this information), but since our goal is the ratio between two measures, this is good enough.
@@ -48,7 +49,7 @@ and its image:
 \begin{equation}
 C_\infty'^* = I'J'^T + J'I'^T
 \end{equation}
-where $I = \bigl(\begin{smallmatrix}1 \\ i \\ 0 \end{smallmatrix} \bigr)$, $J = \bigl(\begin{smallmatrix}1 \\ -i \\ 0 \end{smallmatrix} \bigr)$ are the circular points (intersection between a circumference and the line at infinity) and $ I' $, $ J' $ their images.
+where $I = \bigl(\begin{smallmatrix}1 \\ i \\ 0 \end{smallmatrix} \bigr)$, $J = \bigl(\begin{smallmatrix}1 \\ -i \\ 0 \end{smallmatrix} \bigr)$ are the circular points (intersection between a circumference and the line at infinity) and $I'$, $J'$ their images.
 Since a dual conic is transformed from a projective transformation H as:
 $$ C'^* = H^* C^* H^T $$
 we can exploit this relation to get $H_R$. In fact, in the case of $C_\infty^*$:
@@ -88,6 +89,7 @@ The following steps have been followed:
 \label{fig:universe}
 \end{figure}
 
+\newpage
 \subsection{Calibrate the camera determining the matrix K}
 Under perspective projection, a scene point $X$ in space is projected to an image point $x$ via a projection matrix $P$ as:
 \begin{equation}
@@ -161,7 +163,7 @@ $$ O = RNS(P) $$
 The equation of the ray with direction $(l, m, n)$ passing through $O = (x_0, y_0, z_0)$ is:
 $$ \frac{x-x_0}{l} = \frac{y-y_0}{m} = \frac{z-z_0}{n} $$
 
-We want to fix the world frame $W^1$ such that it lies in the car symmetry plane $\Pi_{sym}$ (we know that this plane is vertical and also orthogonal to $\Pi_p$, so it has equation $x=k$). So, we can intersect two viewing rays of a pair of symmetric features and then take the midpoint as the origin $O_{W^1}$ of the new frame:
+We want to fix the world frame $W^1$ such that it lies in the car symmetry plane $\Pi_{sym}$ (we know that this plane is vertical and also orthogonal to $\Pi_p$, so it has equation $x=k$). So, we can intersect two viewing rays of a pair of symmetric features with $\Pi_{p}$ and then take the midpoint as the origin $O_{W^1}$ of the new frame:
 $$ O_{W^1} = ( x_s = \frac{x_1+x_2}{2}, \: \frac{y_1+y_2}{2}, \: \frac{z_1+z_2}{2}=1 ) $$
 The symmetry plane $\Pi_{sym}$ will be:
 $$ x=x_s $$
@@ -171,52 +173,49 @@ $$ \begin{cases}
 \frac{x_1-x_0}{l_1} = \frac{y_1-y_0}{m_1} = \frac{z_1-z_0}{n_1} & \quad P_1 \text{ satisfies equation of ray 1} \\
 \frac{x_2-x_0}{l_2} = \frac{y_2-y_0}{m_2} = \frac{z_2-z_0}{n_2} & \quad P_2 \text{ satisfies equation of ray 2} \\
 z_1 = z_2 & \quad P_1 \text{ and } P_1 \text{ are in the same vertical plane} \\
-\frac{x_1 + x_2}{2} = x_s & \quad P_1 \text{ and } P_1 \text{ are symmetric w.r.t } x=x_s \\
+\frac{x_1 + x_2}{2} = x_s & \quad P_1 \text{ and } P_1 \text{ are symmetric w.r.t } \Pi_{sym} \\
 \end{cases} $$
 where $d_1 = (l_1, m_1, n_1)$ and $d_2 = (l_2, m_2, n_2)$ are the viewing rays
 passing though the two unknown intersection points $P_1 = (x_1, y_1, z_1)$ and $P_2 = (x_2, y_2, z_2)$ respectively.
 \\
-We can repeat this process multiple times for other pairs of symmetric points visible in the image.
+We can repeat this process multiple times for other pairs of symmetric points visible in the image. (\ref{fig:3dreconstructionW0})
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.3]{images/3DreconstructionW0.png}
+\caption{Symmetric points in the reference frame $W^0$}
+\label{fig:3dreconstructionW0}
+\end{figure}
 \\
+
 These points are expressed in the reference frame $W^0$. To change reference frame to $W^1$, we can compute the matrix that allows to pass from $W^0$ to $W^1$:
 $$ T_{W_0 \rightarrow W_1} = \begin{pmatrix} \multicolumn{3}{c}{I_{3 \times 3}} & -O_{W^1} \\
 0 & 0 & 0 & 1
 \end{pmatrix} $$
-where $O_{W^1}$ is the origin of $W^1$ expressed in the coordinates of the frame $W^0$ (notice that the two reference frames have the same orientation by construction).
+where $O_{W^1}$ is the origin of $W^1$ expressed in the coordinates of the frame $W^0$ (notice that the two reference frames have the same orientation by construction). (\ref{fig:3dreconstructionW1})
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.3]{images/3DreconstructionW1.png}
+\caption{Symmetric points in the reference frame $W^1$}
+\label{fig:3dreconstructionW1}
+\end{figure}
 
+\newpage
 \subsection{Localize the camera relative to the car reference}
-In the last section, when we have fixed the origin of the world frame, we have also established the translation between the reference frames of the camera and the world. In fact, at first, the two frame were coincident, so $t=(0, 0, 0)$. Then, the world frame has been set to a specific point $O=(x_0, y_0, z_0)$. This corresponds to a translation vector from the camera frame to the new world frame:
+In the last section, when we have fixed the origin of the world frame $W^1$, we have also established the translation between the reference frames of the camera and the world. In fact, at first, the two frames were coincident, so $t=(0, 0, 0)$. Then, the world frame has been set to a specific point $O=(x_0, y_0, z_0)$. Since the two frame have the same orientation, this corresponds to a pure translation from the camera frame to the new world frame, thus a vector:
 $$ t_{camera \rightarrow world} = (x_0, \: y_0, \: z_0) $$
-Now, if we want to know the translation vector from the world to the camera, we just need to invert the previous relation:
+Now, if we want to know the position of the camera, we just need to invert the previous vector:
 $$ t_{world \rightarrow camera} = -t_{camera \rightarrow world} = (-x_0, \: -y_0, \: -z_0) $$
-The rotation matrix $R$ will be:
-$$ R_{world \rightarrow camera} = R^{-1}_{camera \rightarrow world} $$
 
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.3]{images/cameralocation.png}
+\caption{Camera location}
+\label{fig:cameralocation}
+\end{figure}
+
+\newpage
 \section{Results}
 
-
-\section{to add}
-Since we placed the origin of the world frame in the symmetry plane, its
-equation will be x=0. Knowning the viewing rays of the pairs of the projected
-image points that were symmetric in the scene, we can find the original
-3D location by imposing that this points must be symmetric with respect
-to the symmetry plane x=0 (so, they must be opposite x coordinate sign).
-In addition, we also know that their y coordinates must be equal, again
-for their symmetric relation. This is equivalent to solve the system:
-$$ \begin{cases}
-\frac{x_1-x_0}{l_1} = \frac{y_1-y_0}{m_1} = \frac{z_1-z_0}{n_1} \\
-\frac{x_2-x_0}{l_2} = \frac{y_2-y_0}{m_2} = \frac{z_2-z_0}{n_2} \\
-y_1 = y_2 \\
-z_1 = z_2 
-\end{cases} $$
-where $d_1 = (l_1, m_1, n_1)$ and $d_2 = (l_2, m_2, n_2)$ are the viewing rays
-passing though $P_1 = (x_1, y_1, z_1)$ and $P_2 = (x_2, y_2, z_2)$
-respectively, and $O = (x_O, y_O, z_O)$. \\
-We can now build the matrix that allows to compute the change of coordinates:
-$$M_{world \leftarrow camera} = $$
-
-\section{Conclusion}
-``I always thought something was fundamentally wrong with the universe'' \citep{adams1995hitchhiker}
 
 \bibliographystyle{plain}
 \bibliography{references}
