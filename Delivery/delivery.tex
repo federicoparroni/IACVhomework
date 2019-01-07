@@ -25,9 +25,9 @@ At first, the original image is filtered to enhance the contrast. Then, for each
 Now we can use \textit{regionprops} to get the parameters of some ellipsis in the image. From this set of elements, only the most significant are taken and we get rid off all the others, resulting in the following:
 \begin{figure}[h!]
 \centering
-%\includegraphics[scale=1.7]{universe}
-\caption{The Universe}
-\label{fig:universe}
+\includegraphics[scale=0.6]{images/homework_08.png}
+\caption{Ellipsis}
+\label{fig:ellipsis}
 \end{figure}
 
 
@@ -84,10 +84,12 @@ The following steps have been followed:
 
 \begin{figure}[h!]
 \centering
-%\includegraphics[scale=1.7]{universe}
-\caption{The Universe}
-\label{fig:universe}
+\includegraphics[scale=0.35]{images/homework_10.png}
+\caption{Pairs of point to rectify and exploited lines}
+\label{fig:rectification}
 \end{figure}
+
+The resulted ratio is: \textbf{0.1776}
 
 \newpage
 \subsection{Calibrate the camera determining the matrix K}
@@ -167,7 +169,15 @@ We want to fix the world frame $W^1$ such that it lies in the car symmetry plane
 $$ O_{W^1} = ( x_s = \frac{x_1+x_2}{2}, \: \frac{y_1+y_2}{2}, \: \frac{z_1+z_2}{2}=1 ) $$
 The symmetry plane $\Pi_{sym}$ will be:
 $$ x=x_s $$
-\\
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.35]{images/homework_14.png}
+\caption{Pairs of symmetric points}
+\label{fig:symmetricfeatures}
+\end{figure}
+
+\newpage
 Now that we have found $\Pi_{sym}$, all other symmetric points that lies on a different plane from $z=1$ can be found by imposing the following system of equations:
 $$ \begin{cases}
 \frac{x_1-x_0}{l_1} = \frac{y_1-y_0}{m_1} = \frac{z_1-z_0}{n_1} & \quad P_1 \text{ satisfies equation of ray 1} \\
@@ -201,22 +211,26 @@ where $O_{W^1}$ is the origin of $W^1$ expressed in the coordinates of the frame
 
 \newpage
 \subsection{Localize the camera relative to the car reference}
-In the last section, when we have fixed the origin of the world frame $W^1$, we have also established the translation between the reference frames of the camera and the world. In fact, at first, the two frames were coincident, so $t=(0, 0, 0)$. Then, the world frame has been set to a specific point $O=(x_0, y_0, z_0)$. Since the two frame have the same orientation, this corresponds to a pure translation from the camera frame to the new world frame, thus a vector:
-$$ t_{camera \rightarrow world} = (x_0, \: y_0, \: z_0) $$
-Now, if we want to know the position of the camera, we just need to invert the previous vector:
-$$ t_{world \rightarrow camera} = -t_{camera \rightarrow world} = (-x_0, \: -y_0, \: -z_0) $$
+In the last section, when we have fixed the origin of the world frame $W^1$, we have also established the translation between the temporary reference frame $W_0$ and the world frame. In fact, at first, the two frames were coincident, so $t=(0, 0, 0)$. Then, the world frame $W_1$ has been set to a specific point $O_{W^1}=(x_0, y_0, z_0)$. Since the two frame have the same orientation, this corresponds to a pure translation by a vector:
+$$ t_{W_0 \rightarrow W_1} = O_{W^1} = (x_0, \: y_0, \: z_0) $$
+The inverse transformation, i.e. from , is simply the inverse of the previous vector:
+$$ t_{W_1 \rightarrow W_0} = -t_{W_0 \rightarrow W_1} = (-x_0, \: -y_0, \: -z_0) $$
+Thus the position of the camera can be obtained by translating the origin of $W_0$ (that was coincident to the camera location) by the above vector:
+$$ P_{cam} = O_{W^0} + t_{W_1 \rightarrow W_0} = \begin{pmatrix}
+0 \\ 0 \\ 0 \\ 1
+\end{pmatrix} + (-x_0, \: -y_0, \: -z_0) = (-x_0, \: -y_0, \: -z_0) $$
+\\
+We can get to the same result by applying the matrix $T_{W_0 \rightarrow W_1}$ to the origin of the frame $W_0$:
+$$ P_{cam} = T_{W_0 \rightarrow W_1} * O_{W^0} = -O_{W^1} =  (-x_0, \: -y_0, \: -z_0) $$
 
 \begin{figure}[hbt!]
 \centering
-\includegraphics[scale=0.3]{images/cameralocation.png}
+\includegraphics[scale=0.25]{images/cameralocation.png}
 \caption{Camera location}
 \label{fig:cameralocation}
 \end{figure}
 
 \newpage
-\section{Results}
-
-
 \bibliographystyle{plain}
 \bibliography{references}
 \end{document}
