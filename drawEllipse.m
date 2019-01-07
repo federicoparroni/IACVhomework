@@ -1,7 +1,7 @@
 function [] = drawEllipse(s, t)
 % drawEllipse Draw an ellipse.
 %   s: structure returned by regionprops
-%   t: support from 0 to 2?, like: linspace(0,2*pi,60)
+%   t: support from 0 to 2pi, like: linspace(0,2*pi,60)
     
     a = s.MajorAxisLength/2;
     b = s.MinorAxisLength/2;
