@@ -1,4 +1,4 @@
-%%  IMAGE ANALYSIS & COMPUTER VISION HOMEWORK
+%%  IMAGE ANALYSIS & COMPUTER VISION HOMEWORK - TEST
 %   Federico Parroni 10636497
 %   
 
@@ -6,21 +6,16 @@ close all; clear all; clc;
 warning('off', 'images:initSize:adjustingMag');
 
 %% 1. Ellipsis detection
-% Load the original image and compute the normalization factor and matrix
-% to bring coordinates in the interval [0,1]
 original_im = imread('Image2.jpg');
 
 norm_f = max((size(original_im)));
 norm_mx = diag([1/norm_f, 1/norm_f, 1]);
 
-maxw = length(original_im) * 1.2;   % used to draw lines over the image
+maxw = length(original_im) * 1.2;
 
-%figure(); imshow(original_im); title('Original image');
+figure(); imshow(original_im); title('Original image');
 
 %% 1.1 Preprocess the original image
-% As first, enhance the contrast of the image by remapping pixels
-% intensities. We will apply 2 different filters to detect both wheels of
-% the car
 gray_im = rgb2gray(original_im);
 scale_factor = 4;
 resized_gray_im = imresize(gray_im, 1/scale_factor);
@@ -63,7 +58,7 @@ ellipsis = [s1; s2];
 figure(); imshow(resized_gray_im); title('Ellipsis of interest');
 for k=1:length(ellipsis)
     drawEllipse(ellipsis(k),t);
-    % normalize the ellipsis
+    
     ellipsis(k).Centroid = ellipsis(k).Centroid / norm_f * scale_factor;
     ellipsis(k).MajorAxisLength = ellipsis(k).MajorAxisLength / norm_f * scale_factor;
     ellipsis(k).MinorAxisLength = ellipsis(k).MinorAxisLength / norm_f * scale_factor;
@@ -71,18 +66,16 @@ end
 clear s1; clear s2; clear t;
 
 %% 2.1 Determine the ratio between the diameter of the wheel circles and the wheel-to-wheel distance 
-%
 wheel_ant = ellipsis(1);
 wheel_post = ellipsis(2);
 wheel_ant_coeffs = ellipseCoeff(wheel_ant);
 wheel_post_coeffs = ellipseCoeff(wheel_post);
-% Find the dual conics, inverting the matrices of the conics
+
 dual_wheel_ant_coeffs = conicCoeffFromMatrix(inv(conicMatrixFromCoeff(wheel_ant_coeffs)));
 dual_wheel_post_coeffs = conicCoeffFromMatrix(inv(conicMatrixFromCoeff(wheel_post_coeffs)));
 
-% Get the 4 tangent lines and plot them with different colors
 tangent_lines = intersectsconics(dual_wheel_ant_coeffs,dual_wheel_post_coeffs);
-% Plot the 4 tangent lines
+
 figure(); imshow(gray_im);
 styles=['r-','m-','b-','y-']; widths=[1 2 2 1];
 for k=1:length(tangent_lines)
@@ -92,29 +85,24 @@ end
 clear line; clear styles; clear widths; clear k;
 
 %% 2.1.1 Intersect lines and conics
-% Intersects lines and conics
 uppertangentline = [tangent_lines(2,:), 1];
 lowertangentline = [tangent_lines(3,:), 1];
 upperwheelpoint1 = real(intersectsconics(wheel_post_coeffs, [0 0 0 uppertangentline]));
 lowerwheelpoint1 = real(intersectsconics(wheel_post_coeffs, [0 0 0 lowertangentline]));
 upperwheelpoint2 = real(intersectsconics(wheel_ant_coeffs, [0 0 0 uppertangentline]));
 lowerwheelpoint2 = real(intersectsconics(wheel_ant_coeffs, [0 0 0 lowertangentline]));
-% Take only one of the 2 identically tangent points (molteplicity 2)
 upperwheelpoint1 = upperwheelpoint1(1,:);
 lowerwheelpoint1 = lowerwheelpoint1(1,:);
 upperwheelpoint2 = upperwheelpoint2(1,:);
 lowerwheelpoint2 = lowerwheelpoint2(1,:);
-% Get vertical lines through tangency points of each wheel
 line_vert_post_wheel = cross([lowerwheelpoint1, 1],[upperwheelpoint1, 1]);
 line_vert_ant_wheel = cross([lowerwheelpoint2, 1],[upperwheelpoint2, 1]);
-% Get the vanishing points
 vanish_pointz = cross(uppertangentline, lowertangentline);
 vanish_pointz = vanish_pointz / vanish_pointz(3);
 vanish_pointz = vanish_pointz.';
 vanish_pointy = cross(line_vert_post_wheel, line_vert_ant_wheel);
 vanish_pointy = vanish_pointy / vanish_pointy(3);
 vanish_pointy = vanish_pointy.';
-% Get the 4 intersection points
 middle_point = cross( [tangent_lines(1,:), 1], [tangent_lines(4,:), 1] );
 middle_point = middle_point / middle_point(3);
 middle_line = cross( vanish_pointz, middle_point' ).';
@@ -137,13 +125,11 @@ plot(post_wheel_points(2,1)*norm_f,post_wheel_points(2,2)*norm_f,'r*','MarkerSiz
 plotLine(line_vert_post_wheel * norm_mx, [0 maxw],'-',2);
 plotLine(line_vert_ant_wheel * norm_mx, [0 maxw],'-',2);
 
-% Get the image of the line at the infinity
 inf_point1 = cross( lowertangentline, uppertangentline );
 inf_point2 = cross( line_vert_post_wheel, line_vert_ant_wheel );
 line_infinity = cross( inf_point1, inf_point2 );
 plotLine(line_infinity * norm_mx, [0 maxw], '-', 2);
-% Get the image of the circular points by intersecting the ellipsis and the
-% line at the infinity
+
 circ_point1 = intersectsconics(wheel_post_coeffs, [0 0 0 line_infinity]);
 circ_point2 = intersectsconics(wheel_ant_coeffs, [0 0 0 line_infinity]);
 circ_points = (circ_point1 + circ_point2) ./ 2;
@@ -151,21 +137,16 @@ legend('line1','line2','line3','line4', 'vertical1','vertical2', 'infinity');
 hold off;
 
 %% 2.1.2 Rectify the image using the image of the degenerate dual conic
-% The image of the degenerate dual conic can be computed by multiplying the
-% images of the circular points:
-% 
-% $\omega_{\infty} = I*J' + J*I'$
-% 
+
 I = [circ_points(1,:)'; 1];
 J = [circ_points(2,:)'; 1];
 image_dual_conic = I*J.' + J*I.';
-% When we have w, we can find the homography using SVD
+
 [~, DC, H] = svd(image_dual_conic);
 normalization = sqrt(DC); normalization(3,3)=1;
 H_n = normalization * H;
 H = inv(H_n);
 
-% Find the rectified intersection wheel points
 a = H \ [post_wheel_points(2,:), 1]'; a = a/a(3);
 b = H \ [post_wheel_points(1,:), 1]'; b = b/b(3);
 c = H \ [ant_wheel_points(2,:), 1]'; c = c/c(3);
@@ -198,8 +179,6 @@ vanish_pointx = vanish_pointx.' / vanish_pointx(3);
 plot(vanish_pointx(1)*norm_f,vanish_pointx(2)*norm_f,'b*','MarkerSize',6,'HandleVisibility','off');
 
 %% 2.2.2 Compute K from w
-% Get the image of the absolute conic (w) from the constraints on
-% orthogonal directions
 syms fx, syms fy, syms u0, syms v0;
 K = [fx, 0, u0; ...
      0, fy, v0; ...
@@ -217,7 +196,7 @@ fy = real(double(res.fy)); fy = fy(fy > 0); fy = fy(1);
 u0 = real(double(res.u0)); u0 = u0(1);
 v0 = real(double(res.v0)); v0 = v0(1);
 clear K, clear eqs, clear res;
-% Print the matrix K (normalized)
+
 K = [fx, 0, u0; ...
      0, fy, v0; ...
      0, 0, 1]

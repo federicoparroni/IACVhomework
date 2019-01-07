@@ -301,9 +301,6 @@ K = [fx, 0, u0; ...
      0, fy, v0; ...
      0, 0, 1]
 
-% central_line = cross(cross(uppertangentline,lowertangentline),cross([tangent_lines(1,:),1],[tangent_lines(4,:),1]));
-% pointspost = intersectsconics(wheel_post_coeffs, [0 0 0 central_line]);
-% antspost = intersectsconics(wheel_ant_coeffs, [0 0 0 central_line]);
 
 %% 2.3 3D Reconstruction
 % We want to reconstruct the 3D location of some symmetric point in the
@@ -314,6 +311,10 @@ K = [fx, 0, u0; ...
 % We can find the rotation matrix of the camera with respect to the world
 % reference frame. We can exploit the vanishing points to find the
 % columns of R.
+
+%%
+% N.B.: in all the following plots, axis x, y, z are colored with red,
+% green and blue respectively
 
 %% 2.3.1 Fix the origin of reference frame in the camera frame origin
 %
@@ -328,7 +329,7 @@ plate_center = transpose([1033, 1513, 1] * norm_mx);
 % Initially we set t = 0
 t_0 = [0; 0; 0];
 
-R = [r1 r2 r3];
+R = [r1 r2 r3]
 P = K*[R t_0];
 M = P(:,1:3);
 
@@ -452,12 +453,13 @@ grid on; title('3D Reconstruction (in the reference frame W1)');
 legend('origin','x axis','y axis','z axis', ...
          'left plate','right plate','left light','right light', ...
          'left stop','right stop');
+set(gca, 'CameraPosition', [0,1,-1]);
 
 %% 2.4 Localize the camera in the world frame
 % Now that we have fix the reference frame W1 with respect to W0, we can
 % find the location of the camera in this new frame.
 
-camera_location = neworigin
+camera_location = T1*O
 plot3(camera_location(1), camera_location(2), camera_location(3), ...
-    'k^', 'MarkerSize',8, 'DisplayName','camera');
+   'k^', 'MarkerSize',8, 'DisplayName','camera');
 
