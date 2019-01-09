@@ -29,7 +29,6 @@ function [loc_x,loc_y] = harris(img, sigma, border_margin)
     %T=0.075;
     CIM=cm;
     CIM(cm<T)=0;
-    % similarly one could use the Otzu method
 
     % perform nonlocal maximum suppression on the thresholded measure
     support=true(11);

@@ -389,7 +389,7 @@ drawVRay(M,O,light_right, 'm', 2);
 drawVRay(M,O,stop_left, 'g', 2);
 drawVRay(M,O,stop_right, 'g', 2);
 
-% planes z=0 and x=0
+% planes z=1 and symmetry plane
 drawPlane([0; 0; 1; -z_dist], 'k', 3);
 drawPlane([1; 0; 0; -neworigin(1)], 'y', 2);
 
