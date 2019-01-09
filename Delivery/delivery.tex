@@ -30,14 +30,29 @@ Now we can use \textit{regionprops} to get the parameters of some ellipsis in th
 \label{fig:ellipsis}
 \end{figure}
 
-
+\newpage
 \subsection{Feature detection}
-We can use the well-known Harris to extract features from the image. I used the value 2.7 for the standard deviation of the Gaussian filter (that controls the sensitivity of the filter) to avoid extracting too many and useless features.
+We can use the well-known Harris to extract features from the image. Corners are those pixels that have the response $E_{x,y}(r,c)$ to a sliding window $w$ (which captures each pixel neighbour) high:
+$$ E_{x,y}(r,c) = \sum_{(u,v) \in U_{r,c}} w_{r,c}(u,v) [I(u,v) - I(u-x,v-y)]^2 $$
+We can expand $ I(u-x,v-y)$ in Taylor series and considering only the first term we approximate:
+$$ E_{x,y}(r,c) \approx \sum_{(u,v) \in U_{r,c}} w_{r,c}(u,v) [xI_x(u,v) + yI_y(u,v)]^2 $$
+This can be rewritten in matrix form as:
+$$ E_{x,y}(r,c) \approx (x,y) M_{r,c} \begin{pmatrix} x \\ y \end{pmatrix} $$
+where: $ M_{r,c} = \begin{pmatrix}
+I_x^2 \otimes w & I_x I_y \otimes w \\
+I_x I_y \otimes w & I_y^2 \otimes w
+\end{pmatrix} $. $I_x$ and $I_y$ are the image derivatives and are computed with a Gaussian filter in our case (with a certain standard deviation $\sigma$).
+We can limit the analysis to only $M_{r,c}$, in particular looking to the eigenvalues we can establish if the pixel $(r,c)$ is a corner. In fact, for corners, both $\lambda_1$ and $\lambda_2$ are large. It is possibile to avoid computing the eigenvalues of $M_{r,c}$ evaluating another measure:
+$$ CM = \frac{det(M_{r,c})}{Tr(M_{r,c}) + \epsilon} = \frac{(I_x^2 \otimes w)(I_y^2 \otimes w) - (I_x I_y \otimes w)^2}{(I_x^2 + I_y^2) \otimes w + \epsilon} $$
+that is high if both eigenvalues are high.
+\\
+\\
+I used the value $\sigma = 2.7$ for the standard deviation of the Gaussian filter (that controls the sensitivity of the filter) to avoid extracting too many and useless features.
 
 \newpage
 \section{Geometry}
 \subsection{Diameter of wheel and wheel-to-wheel distance ratio}
-The ratio can be found by computing the matrix $H_R$ such that, multiplied to an image point belonging to a plane, it gives back the rectified version of it. We can use $H_R$ to find the rectified wheels and then measure directly their diameters and distance in pixels. These are not the original measures (because we cannot find the real size with only this information), but since our goal is the ratio between two measures, this is good enough.
+We approach the computation of the ratio by finding a matrix $H_R$ such that, multiplied by an image point belonging to a plane, it gives back the rectified version of it. We can use $H_R$ to find the rectified wheels and then measure directly the diameter and the wheel-to-wheel distance. These are not the real measures (because we cannot find the original size with only this information), but since our goal is the ratio between two measures, this is good enough.
 To compute $H_R$ we can resort to the \textit{conic dual to the circular points} and its image. This is:
 $$ C_\infty^* = IJ^T + JI^T = \begin{pmatrix}
 1 & 0 & 0 \\
@@ -136,10 +151,10 @@ $$
 So, if we manage to find $\omega$, we have also found K. The \textit{image of the absolute conic} is a symmetric matrix and has 4 degrees of freedom, so we need to get 4 equations to fully determine it. For this scope, we can exploit the orthogonal vanishing points $v_x$, $v_y$, $v_z$ and one image of a circular point found before (that must belong to the conic), resulting in:
 $$
 \begin{cases}
-v_x^T \: \omega^* \: v_y = 0 \\
-v_y^T \: \omega^* \: v_z = 0 \\
-v_z^T \: \omega^* \: v_x = 0 \\
-I'^T \: \omega^* \: I' = 0
+v_x^T \: \omega \: v_y = \cos (90) = 0 \\
+v_y^T \: \omega \: v_z = \cos (90) = 0 \\
+v_z^T \: \omega \: v_x = \cos (90) = 0 \\
+I'^T \: \omega \: I' = 0
 \end{cases}
 $$
 
@@ -222,6 +237,10 @@ $$ P_{cam} = O_{W^0} + t_{W_1 \rightarrow W_0} = \begin{pmatrix}
 \\
 We can get to the same result by applying the matrix $T_{W_0 \rightarrow W_1}$ to the origin of the frame $W_0$:
 $$ P_{cam} = T_{W_0 \rightarrow W_1} * O_{W^0} = -O_{W^1} =  (-x_0, \: -y_0, \: -z_0) $$
+The numerical result obtained is:
+$$ P_{cam} = \begin{pmatrix}
+-1.489 \\ 0.6782 \\ -1
+\end{pmatrix} $$
 
 \begin{figure}[hbt!]
 \centering
@@ -230,7 +249,22 @@ $$ P_{cam} = T_{W_0 \rightarrow W_1} * O_{W^0} = -O_{W^1} =  (-x_0, \: -y_0, \: 
 \label{fig:cameralocation}
 \end{figure}
 
+\subsection{Comparison with the test image}
+The camera calibration matrix obtained from the first image is the following:
+$$ K = \begin{pmatrix}
+0.7820 & 0 & 0.5781 \\
+0 & 0.7778 & 0.4762 \\
+0 & 0 & 1
+\end{pmatrix} $$
+I calibrated the camera also using the second image as countercheck (see homework\_test.html for further details). The result obtained is the following matrix:
+$$ K = \begin{pmatrix}
+0.9191 & 0 & 0.4921 \\
+0 & 0.886 & 0.1861 \\
+0 & 0 & 1
+\end{pmatrix} $$
+
 \newpage
 \bibliographystyle{plain}
 \bibliography{references}
+
 \end{document}
