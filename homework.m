@@ -219,8 +219,8 @@ hold off;
 % 
 % $\omega_{\infty} = I*J' + J*I'$
 % 
-I = [circ_points(1,:)'; 1];
-J = [circ_points(2,:)'; 1];
+I = [circ_points(1,:).'; 1];
+J = [circ_points(2,:).'; 1];
 image_dual_conic = I*J.' + J*I.';
 % When we have w, we can find the homography using SVD
 [~, DC, H] = svd(image_dual_conic);

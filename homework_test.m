@@ -37,13 +37,6 @@ s1.Orientation = s1.Orientation + 2;
 s1.MajorAxisLength = s1.MajorAxisLength - 5;
 s1.MinorAxisLength = s1.MinorAxisLength - 7;
 
-% t = linspace(0,2*pi,60);
-% ellipsis = s1;
-% figure(); imshow(resized_gray_im);
-% for k=1:length(ellipsis)
-%     drawEllipse(ellipsis(k),t);
-% end
-
 %%
 % Filter 2
 imf2 = imbinarize(resized_gray_im,'adaptive');
@@ -138,20 +131,24 @@ hold off;
 
 %% 2.1.2 Rectify the image using the image of the degenerate dual conic
 
-I = [circ_points(1,:)'; 1];
-J = [circ_points(2,:)'; 1];
+I = [circ_points(1,:).'; 1];
+J = [circ_points(2,:).'; 1];
 image_dual_conic = I*J.' + J*I.';
 
 [~, DC, H] = svd(image_dual_conic);
 normalization = sqrt(DC); normalization(3,3)=1;
 H_n = normalization * H;
-H = inv(H_n);
+H_n = inv(H_n);
 
 a = H \ [post_wheel_points(2,:), 1]'; a = a/a(3);
 b = H \ [post_wheel_points(1,:), 1]'; b = b/b(3);
 c = H \ [ant_wheel_points(2,:), 1]'; c = c/c(3);
 d = H \ [ant_wheel_points(1,:), 1]'; d = d/d(3);
 
+figure(); hold on;
+plot(a(1),a(2), 'r+'); plot(b(1),b(2), 'g+');
+plot(c(1),c(2), 'b+'); plot(d(1),d(2), 'k+');
+legend();
 % Compute the ratio distance - diameter from the rectified points
 ratio = norm( a-b, 2) / norm( a-c, 2)
 
