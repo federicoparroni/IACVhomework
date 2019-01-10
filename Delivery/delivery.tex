@@ -247,7 +247,7 @@ $$ P_{cam} = T_{W_0 \rightarrow W_1} * P_{cam}^{W_0} = T_{W_0 \rightarrow W_1} *
 \end{pmatrix} = -O_{W^1} =  (-x_0, \: -y_0, \: -z_0) $$
 The numerical result obtained is:
 $$ P_{cam} = \begin{pmatrix}
--1.489 \\ 0.6782 \\ -1
+-1.4875 \\ 0.6788 \\ -1
 \end{pmatrix} $$
 
 \begin{figure}[hbt!]
@@ -271,6 +271,41 @@ $$ K = \begin{pmatrix}
 0 & 0.886 & 0.1861 \\
 0 & 0 & 1
 \end{pmatrix} $$
+
+\newpage
+\section{Analysis of the experimental results}
+
+\subsection{Wheel diameter and wheel-to-wheel distance ratio}
+The ratio we found in the first image is 0.1776.
+\\
+Looking for the car producer technical sheet, we know that the real wheel-to-wheel distance is 2.634m (and it is a standard for all cars of that model). If we suppose that the car wheel diameter is 18 inches (0.4572m), we get a ratio of: $\frac{0.4572}{2.634} = 0.174$, pretty close to the experimental result.
+\\
+\\
+The ratio we found in the second image is 0.1904.
+
+\subsection{3D reconstruction}
+We found that the two symmetric points of the car plate are in the following locations in the frame $W_1$:
+$$ p_1 = \begin{pmatrix}
+0.1553 \\ 0 \\ 0
+\end{pmatrix}
+$$
+$$ p_2 = \begin{pmatrix}
+-0.1553 \\ 0 \\ 0
+\end{pmatrix}
+$$
+while the camera is in:
+$$ p_{cam} = \begin{pmatrix}
+-1.4875 \\ 0.6788 \\ -1
+\end{pmatrix}
+$$
+The car plate width is: $0.1553 + 0.1553 = 0.3106$.\\
+If we can know the real car plate width, we can also rebuild the entire scene in the real scale.
+The italian car plate has a standard size of 0.53m. Thus the scale factor we have is about:
+$$ f = \frac{0.53}{0.31} = 1.71 $$
+If we don't consider the y coordinate, the camera is $\sqrt{(-1.4875)^2 + (-1)^2} = 1.7924$m far from the center of the car plate (located in the origin of $W_1$).
+So, the distance of the camera from the car plate center is:\\
+$$ f*1.7924 = 1.71*1.7924\textit{m} = 3.07 \textit{m}$$
+
 
 \newpage
 \section{References}
