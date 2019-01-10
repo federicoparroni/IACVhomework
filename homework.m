@@ -336,8 +336,8 @@ M = P(:,1:3);
 O = null(P); O = O/O(4);
 
 % Get some symmetric features
-plate_left = transpose([901, 1465, 1] * norm_mx);
-plate_right = transpose([1207, 1570, 1] * norm_mx);
+plate_left = transpose([871, 1455, 1] * norm_mx);
+plate_right = transpose([1246, 1585, 1] * norm_mx);
 % Use stop points found before
 stop_left = transpose(stop_point1 * norm_mx);
 stop_right = transpose(stop_point2 * norm_mx);
@@ -345,7 +345,7 @@ light_left = transpose([777, 936, 1] * norm_mx);
 light_right = transpose([1521, 1116, 1] * norm_mx);
 
 figure(); imshow(gray_im); hold on;
-plot([901,1207,777,1521,stop_point1(1),stop_point2(1)], [1465,1570,936,1116,stop_point1(2),stop_point2(2)], 'r+');
+plot([871,1246,777,1521,stop_point1(1),stop_point2(1)], [1455,1585,936,1116,stop_point1(2),stop_point2(2)], 'r+');
 hold off;
 
 %%

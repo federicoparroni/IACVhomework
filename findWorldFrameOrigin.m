@@ -28,4 +28,5 @@ function [p1,p2,origin] = findWorldFrameOrigin(ray1,ray2,O,back_plane)
           double(res.z2) ];
     
     origin = (p1+p2)/2;
+    p1(2) = origin(2); p2(2) = origin(2);
 end
