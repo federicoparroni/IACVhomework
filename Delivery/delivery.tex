@@ -8,6 +8,7 @@
 \usepackage{natbib}
 \usepackage{graphicx}
 \usepackage{mathtools}
+\usepackage{hyperref}
 
 \begin{document}
 \maketitle
@@ -166,10 +167,11 @@ $$ \lambda v_x = K \begin{pmatrix} R & t \end{pmatrix} \: \begin{pmatrix} 1 \\ 0
 K \begin{pmatrix} r_1 & r_2 & r_3 & t \end{pmatrix} \: \begin{pmatrix} 1 \\ 0 \\ 0 \\ 0 \end{pmatrix} = 
 K \: r_1
 $$
-where $r_i$ is the $i^{th}$ column of the $R$.
+where $r_i$ is the $i^{th}$ column of the matrix $R$.
 Since the location of the vanishing point $v_x$ can be easily found in the image, we can get $r_1$:
-$$ r_1 = K^{-1} \: x $$
+$$ r_1 = K^{-1} \: v_x $$
 Using the knowledge about the mapping between directions and vanishing points, we can obtain all the 3 columns of the $R$ (the last column can be obtained as cross product between the other two, since the columns of a rotation matrix have to be orthogonal each other). The vanishing point in the image are taken from orthogonal planes of the car, i.e. the right plane containing the wheels and the back plane containing the plate.
+\\
 \\
 Let's initially set $t=0$, so this temporary world frame $W^0$ and the camera frame have the same orign but different rotation. In this setting, we know that the plate of the car lies on a certain vertical plane $\Pi_p$ in the form $z=k$. Since we have a degree of freedom due to the fact that we cannot know the exact measure of any distance (from a single image), let's arbitrarily fix this plane to $z=1$.
 \\
@@ -206,20 +208,22 @@ passing though the two unknown intersection points $P_1 = (x_1, y_1, z_1)$ and $
 We can repeat this process multiple times for other pairs of symmetric points visible in the image. (\ref{fig:3dreconstructionW0})
 \begin{figure}[hbt!]
 \centering
-\includegraphics[scale=0.3]{images/3DreconstructionW0.png}
+\includegraphics[scale=0.4]{images/3DreconstructionW0.png}
 \caption{Symmetric points in the reference frame $W^0$}
 \label{fig:3dreconstructionW0}
 \end{figure}
 \\
 
 These points are expressed in the reference frame $W^0$. To change reference frame to $W^1$, we can compute the matrix that allows to pass from $W^0$ to $W^1$:
-$$ T_{W_0 \rightarrow W_1} = \begin{pmatrix} \multicolumn{3}{c}{I_{3 \times 3}} & -O_{W^1} \\
+\begin{equation}
+T_{W_0 \rightarrow W_1} = \begin{pmatrix} \multicolumn{3}{c}{I_{3 \times 3}} & -O_{W^1} \\
 0 & 0 & 0 & 1
-\end{pmatrix} $$
+\end{pmatrix}
+\end{equation}
 where $O_{W^1}$ is the origin of $W^1$ expressed in the coordinates of the frame $W^0$ (notice that the two reference frames have the same orientation by construction). (\ref{fig:3dreconstructionW1})
 \begin{figure}[hbt!]
 \centering
-\includegraphics[scale=0.3]{images/3DreconstructionW1.png}
+\includegraphics[scale=0.45]{images/3DreconstructionW1.png}
 \caption{Symmetric points in the reference frame $W^1$}
 \label{fig:3dreconstructionW1}
 \end{figure}
@@ -227,16 +231,16 @@ where $O_{W^1}$ is the origin of $W^1$ expressed in the coordinates of the frame
 \newpage
 \subsection{Localize the camera relative to the car reference}
 In the last section, when we have fixed the origin of the world frame $W^1$, we have also established the translation between the temporary reference frame $W_0$ and the world frame. In fact, at first, the two frames were coincident, so $t=(0, 0, 0)$. Then, the world frame $W_1$ has been set to a specific point $O_{W^1}=(x_0, y_0, z_0)$. Since the two frame have the same orientation, this corresponds to a pure translation by a vector:
-$$ t_{W_0 \rightarrow W_1} = O_{W^1} = (x_0, \: y_0, \: z_0) $$
-The inverse transformation, i.e. from , is simply the inverse of the previous vector:
 $$ t_{W_1 \rightarrow W_0} = -t_{W_0 \rightarrow W_1} = (-x_0, \: -y_0, \: -z_0) $$
 Thus the position of the camera can be obtained by translating the origin of $W_0$ (that was coincident to the camera location) by the above vector:
-$$ P_{cam} = O_{W^0} + t_{W_1 \rightarrow W_0} = \begin{pmatrix}
-0 \\ 0 \\ 0 \\ 1
+$$ P_{cam}^{W_1} = P_{cam}^{W_0} + t_{W_1 \rightarrow W_0} = \begin{pmatrix}
+0 \\ 0 \\ 0
 \end{pmatrix} + (-x_0, \: -y_0, \: -z_0) = (-x_0, \: -y_0, \: -z_0) $$
 \\
-We can get to the same result by applying the matrix $T_{W_0 \rightarrow W_1}$ to the origin of the frame $W_0$:
-$$ P_{cam} = T_{W_0 \rightarrow W_1} * O_{W^0} = -O_{W^1} =  (-x_0, \: -y_0, \: -z_0) $$
+We can get to the same result by applying the matrix $T_{W_0 \rightarrow W_1}$ (4) to the origin of the frame $W_0$:
+$$ P_{cam} = T_{W_0 \rightarrow W_1} * P_{cam}^{W_0} = T_{W_0 \rightarrow W_1} * \begin{pmatrix}
+0 \\ 0 \\ 0 \\ 1
+\end{pmatrix} = -O_{W^1} =  (-x_0, \: -y_0, \: -z_0) $$
 The numerical result obtained is:
 $$ P_{cam} = \begin{pmatrix}
 -1.489 \\ 0.6782 \\ -1
@@ -244,11 +248,12 @@ $$ P_{cam} = \begin{pmatrix}
 
 \begin{figure}[hbt!]
 \centering
-\includegraphics[scale=0.25]{images/cameralocation.png}
+\includegraphics[scale=0.45]{images/cameralocation.png}
 \caption{Camera location}
 \label{fig:cameralocation}
 \end{figure}
 
+\newpage
 \subsection{Comparison with the test image}
 The camera calibration matrix obtained from the first image is the following:
 $$ K = \begin{pmatrix}
@@ -262,6 +267,12 @@ $$ K = \begin{pmatrix}
 0 & 0.886 & 0.1861 \\
 0 & 0 & 1
 \end{pmatrix} $$
+
+\newpage
+\section{References}
+All files of this homework can be found in my Github repo: \\
+\\
+\url{https://github.com/keyblade95/IACVhomework.git}
 
 \newpage
 \bibliographystyle{plain}
